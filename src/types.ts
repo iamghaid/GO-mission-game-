@@ -32,11 +32,14 @@ export interface Mission {
   type: 'technical' | 'physical';
   difficulty: 'easy' | 'medium' | 'hard';
   title: string;
+  title_ar?: string; // Optional Arabic title
   role1_instruction: string; // Detail seen ONLY by Role 1
+  role1_instruction_ar?: string; // Optional Arabic instructions seen ONLY by Role 1
   role3_interface: 'grid_3' | 'grid_4' | 'none'; // Technical interfaces or physical (none)
   gridSize?: number; // 3 or 4
   solutionGrid?: number[]; // Grid answers (length 9 or 16)
   solutionNotes?: string; // Information for host verification
+  solutionNotes_ar?: string; // Optional Arabic host verification details
 }
 
 export interface GameState {

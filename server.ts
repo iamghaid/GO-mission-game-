@@ -58,237 +58,130 @@ let gameState: GameState = {
 
 // CURATED FALLBACK CHALLENGES (If Gemini key is missing or fails, we have zero-crash instant play)
 const PRESET_MISSIONS: Mission[] = [
-  // --- EASY TECHNICAL (3x3 GRIDS) ---
+  // --- EASY ---
   {
-    id: "tech_easy_1",
-    type: "technical",
+    id: "class_easy_1",
+    type: "physical",
     difficulty: "easy",
-    title: "Space Teleportation Bridge",
-    role1_instruction: "Recreate the teleporter pad layout. It is a 3x3 grid. Turn ON only the top-left, center, and bottom-right diagonals (from top-left to bottom-right). Explain this diagonal line pattern using only silent sketches or face expressions.",
-    role3_interface: "grid_3",
-    gridSize: 3,
-    solutionGrid: [
-      1, 0, 0,
-      0, 1, 0,
-      0, 0, 1
-    ],
-    solutionNotes: "Diagonal line pattern of 3 nodes: top-left to bottom-right."
+    title: "Line Shortest to Tallest",
+    title_ar: "طابور الأطوال",
+    role1_instruction: "Instruct your team to make a straight line in the classroom from shortest to tallest.",
+    role1_instruction_ar: "وجّه فريقك لتشكيل صف مستمر في الفصل من الأقصر قامة إلى الأطول قامة.",
+    role3_interface: "none",
+    solutionNotes: "Verify students have stood in a perfect height order from shortest to tallest.",
+    solutionNotes_ar: "تأكد من وقوف الطلاب في صف مرتب تصاعديًا حسب الطول."
   },
   {
-    id: "tech_easy_2",
-    type: "technical",
+    id: "class_easy_2",
+    type: "physical",
     difficulty: "easy",
-    title: "Aegis Shield Wall",
-    role1_instruction: "The defense shielding must be activated. On your 3x3 grid, turn ON all 3 tiles of the bottom row. Convey this line silently.",
-    role3_interface: "grid_3",
-    gridSize: 3,
-    solutionGrid: [
-      0, 0, 0,
-      0, 0, 0,
-      1, 1, 1
-    ],
-    solutionNotes: "Entire bottom row activated (3 tiles)."
+    title: "Find Red & Black Shirts",
+    title_ar: "أصحاب اللون الأسود",
+    role1_instruction: "Instruct Executor to find and stand next to 3 students in the classroom wearing black.",
+    role1_instruction_ar: "وجّه المنفذ للبحث عن ٣ طلاب يرتدون اللون الأسود والوقوف بجانبهم.",
+    role3_interface: "none",
+    solutionNotes: "Verify the student stands next to exactly 3 classmates wearing black shirts.",
+    solutionNotes_ar: "تأكد من وقوف الطالب بجانب ٣ طلاب يرتدون ملابس سوداء."
   },
   {
-    id: "tech_easy_3",
-    type: "technical",
+    id: "class_easy_3",
+    type: "physical",
     difficulty: "easy",
-    title: "Pillar of Light",
-    role1_instruction: "A core power beam is rising! On the 3x3 grid, turn ON only the entire middle vertical column of tiles (nodes 2, 5, 8). Sketch this pillar silently.",
-    role3_interface: "grid_3",
-    gridSize: 3,
-    solutionGrid: [
-      0, 1, 0,
-      0, 1, 0,
-      0, 1, 0
-    ],
-    solutionNotes: "Entire middle column activated (3 tiles)."
+    title: "Form Groups of Four",
+    title_ar: "مجموعات من أربعة",
+    role1_instruction: "Instruct Executor to quickly form a group of exactly four students in the room.",
+    role1_instruction_ar: "وجّه المنفذ لتشكيل مجموعة مكونة من ٤ طلاب فورًا في الصف.",
+    role3_interface: "none",
+    solutionNotes: "Verify they have successfully gathered in a group of four.",
+    solutionNotes_ar: "تأكد من تجمعهم في مجموعة متكاملة من ٤ طلاب."
   },
   {
-    id: "tech_easy_4",
-    type: "technical",
+    id: "class_easy_4",
+    type: "physical",
     difficulty: "easy",
-    title: "The Letter T",
-    role1_instruction: "The energy flow forms a capital 'T'. On the 3x3 grid, turn ON the entire top row and the center tile of the bottom row. Convey this classic geometry.",
-    role3_interface: "grid_3",
-    gridSize: 3,
-    solutionGrid: [
-      1, 1, 1,
-      0, 1, 0,
-      0, 1, 0
-    ],
-    solutionNotes: "Capital 'T' shape. Row 1: all ON. Middle and bottom center: ON."
+    title: "Birthday Order Stand up",
+    title_ar: "ترتيب تاريخ الميلاد",
+    role1_instruction: "Instruct your team participants to stand in order of their birthday months (January to December).",
+    role1_instruction_ar: "وجّه فريقك للوقوف بالترتيب الصحيح حسب أشهر ميلادهم من يناير إلى ديسمبر.",
+    role3_interface: "none",
+    solutionNotes: "Verify students have lined up correctly by birthday months.",
+    solutionNotes_ar: "تأكد من ترتيب وقوفهم الصحيح حسب أشهر الميلاد المتتابعة."
   },
 
-  // --- MEDIUM TECHNICAL (4x4 GRIDS) ---
+  // --- MEDIUM ---
   {
-    id: "tech_med_1",
-    type: "technical",
+    id: "class_med_1",
+    type: "physical",
     difficulty: "medium",
-    title: "Smiley Generator Core",
-    role1_instruction: "Recreate a smiling face on the 4x4 coordinate shield. Row 1: no active tiles. Row 2: column 1 and column 4 active (the eyes). Row 3: column 1 and column 4 active (the cheeks). Row 4: Column 2 and Column 3 active (the mouth center). Tell Role 2 silently.",
-    role3_interface: "grid_4",
-    gridSize: 4,
-    solutionGrid: [
-      0, 0, 0, 0,
-      1, 0, 0, 1,
-      1, 0, 0, 1,
-      0, 1, 1, 0
-    ],
-    solutionNotes: "Smiling face matrix. Eyes at row 2 col 1/4; mouth bottom-middle."
+    title: "Organize Shoes Cleanliness",
+    title_ar: "ترتيب نظافة الأحذية",
+    role1_instruction: "Instruct your teammates to organize themselves in a line from cleanest shoes to least clean shoes.",
+    role1_instruction_ar: "وجّه زملائك لتشكيل صف مرتب من الأكثر نظافة في الحذاء إلى الأقل نظافة.",
+    role3_interface: "none",
+    solutionNotes: "Verify the order of cleanest to muddiest shoes in the line.",
+    solutionNotes_ar: "تأكد من صحة الترتيب من الحذاء الأنظف إلى الأقل نظافة."
   },
   {
-    id: "tech_med_2",
-    type: "technical",
+    id: "class_med_2",
+    type: "physical",
     difficulty: "medium",
-    title: "Quantum Border Walls",
-    role1_instruction: "The core is under attack! Protect the borders. On the 4x4 grid, turn ON only the four corners of the grid. All internal and side cells must remain OFF. Explain the four pins.",
-    role3_interface: "grid_4",
-    gridSize: 4,
-    solutionGrid: [
-      1, 0, 0, 1,
-      0, 0, 0, 0,
-      0, 0, 0, 0,
-      1, 0, 0, 1
-    ],
-    solutionNotes: "Only the four corners (indices 0, 3, 12, 15) are turned ON."
+    title: "Sequence Verbal Instructions",
+    title_ar: "سلسلة الحركات اللفظية",
+    role1_instruction: "Teammate must: 1. Touch a window, 2. Clap high twice, and 3. Raise both hands.",
+    role1_instruction_ar: "يجب على زميلك: ١. لمس النافذة، ٢. التصفيق عاليًا مرتين، ٣. رفع كلتا اليدين للأعلى.",
+    role3_interface: "none",
+    solutionNotes: "Verify they performed all 3 verbal instructions in the correct sequence.",
+    solutionNotes_ar: "تأكد من تأديتهم للخطوات الثلاث بالترتيب الصحيح تمامًا."
   },
   {
-    id: "tech_med_3",
-    type: "technical",
+    id: "class_med_3",
+    type: "physical",
     difficulty: "medium",
-    title: "Double Diagonals",
-    role1_instruction: "Generate a giant 'X' on top of your grid! On the 4x4 grid, turn ON the two main diagonal tracks crossing from corner to corner. Draw a giant 'X' on the canvas.",
-    role3_interface: "grid_4",
-    gridSize: 4,
-    solutionGrid: [
-      1, 0, 0, 1,
-      0, 1, 1, 0,
-      0, 1, 1, 0,
-      1, 0, 0, 1
-    ],
-    solutionNotes: "A perfect 4x4 'X' shape containing exactly 8 ON nodes."
+    title: "Organize by Category Bags",
+    title_ar: "تصنيف الحقائب",
+    role1_instruction: "Group students on your team by their school bag colors in separate parts of the classroom.",
+    role1_instruction_ar: "صنّف طلاب فريقك في مجموعات منفصلة في الفصل بناءً على ألوان حقائبهم المدرسية.",
+    role3_interface: "none",
+    solutionNotes: "Verify they have grouped themselves correctly by bag colors.",
+    solutionNotes_ar: "تأكد من تجمع كل لون حقيبة في جهة مخصصة للفصل."
   },
 
-  // --- HARD TECHNICAL (4x4 GRIDS) ---
+  // --- HARD ---
   {
-    id: "tech_hard_1",
-    type: "technical",
-    difficulty: "hard",
-    title: "Nuclear Core Ring",
-    role1_instruction: "Recreate the high-level containment ring. On the 4x4 grid, turn ON the outer ring of cells BUT keep the center 2x2 cells completely deactivated. Draw an empty box.",
-    role3_interface: "grid_4",
-    gridSize: 4,
-    solutionGrid: [
-      1, 1, 1, 1,
-      1, 0, 0, 1,
-      1, 0, 0, 1,
-      1, 1, 1, 1
-    ],
-    solutionNotes: "Continuous box frame of 12 cells. Center 4 cells are OFF."
-  },
-  {
-    id: "tech_hard_2",
-    type: "technical",
-    difficulty: "hard",
-    title: "Binary Crosshairs",
-    role1_instruction: "Align the cosmic sights! On the 4x4 grid, turn ON the middle two columns and the middle two rows, leaving only the four outer corner quadrants completely OFF. Show a crosshair silhouette.",
-    role3_interface: "grid_4",
-    gridSize: 4,
-    solutionGrid: [
-      0, 1, 1, 0,
-      1, 1, 1, 1,
-      1, 1, 1, 1,
-      0, 1, 1, 0
-    ],
-    solutionNotes: "Plus-sign / target crosshair. 12 active central/cross tiles; 4 corners are OFF."
-  },
-
-  // --- EASY PHYSICAL (FIELD GOOFY ACTIONS) ---
-  {
-    id: "phys_easy_1",
-    type: "physical",
-    difficulty: "easy",
-    title: "The Royal Coronation",
-    role1_instruction: "Describe this royal mission: Role 3 must sit strictly erect on a classroom chair while holding a water bottle like a royal golden scepter, while Role 2 bows dramatically to them three times. No speech allowed from Role 1!",
-    role3_interface: "none",
-    solutionNotes: "Confirm Role 3 sits on a throne-chair holding a bottle upright like a scepter while Role 2 bows down three separate times."
-  },
-  {
-    id: "phys_easy_2",
-    type: "physical",
-    difficulty: "easy",
-    title: "The Super Secret Spy",
-    role1_instruction: "Guide your agents: Role 3 must put hands around their eyes pretending to wear cool tech spy glasses, and stand facing a corner wall completely frozen with legs crossed.",
-    role3_interface: "none",
-    solutionNotes: "Confirm Role 3 has hands in a circle outline around eyes like goggled spectacles and stands facing the classroom corner in frozen silence."
-  },
-  {
-    id: "phys_easy_3",
-    type: "physical",
-    difficulty: "easy",
-    title: "Zen Master Meditation",
-    role1_instruction: "Zen state activated! Role 3 must sit cross-legged flat on the classroom floor, keep both eyes fully closed, and keep their thumbs and index fingers touching together in a classic Zen pose above their knees.",
-    role3_interface: "none",
-    solutionNotes: "Confirm Role 3 sits cross-legged on the ground, has eyes shut, and maintains a traditional Zen finger-circle mudra pose."
-  },
-
-  // --- MEDIUM PHYSICAL (FIELD GOOFY ACTIONS) ---
-  {
-    id: "phys_med_1",
-    type: "physical",
-    difficulty: "medium",
-    title: "The Solar Sail Probe",
-    role1_instruction: "Wacky cosmic antenna! Role 3 must stand on one foot on a student chair, fully extending their left arm straight up to the sky. Meanwhile, Role 2 must kneel besides the chair holding a textbook above their own head as a communicator panel.",
-    role3_interface: "none",
-    solutionNotes: "Confirm Role 3 stands balanced on one leg on a chair with their arm pointing to the sky, and Role 2 is kneeling on the floor holding a book above head."
-  },
-  {
-    id: "phys_med_2",
-    type: "physical",
-    difficulty: "medium",
-    title: "Sleeping Space Overlord",
-    role1_instruction: "The commander is hyper-sleeping! Role 3 must lay their head down entirely flat on a desk. Role 2 must sit right next to them on a chair, using a folder or notebook to gently fan them repeatedly.",
-    role3_interface: "none",
-    solutionNotes: "Confirm Role 3's head is down flat as if asleep on a desk, and Role 2 is fanning them continuously with a folder or notepad."
-  },
-  {
-    id: "phys_med_3",
-    type: "physical",
-    difficulty: "medium",
-    title: "Matrix Laser Dodge",
-    role1_instruction: "A laser grid is passing through! Role 3 must achieve a slow-motion dramatic back-bend as if avoiding bullets or laser beams, while Role 2 holds a long ruler or stick 5 inches above them as the laser.",
-    role3_interface: "none",
-    solutionNotes: "Confirm Role 3 is doing a back-bend to dodge, and Role 2 is holding a textbook, ruler or stick horizontally over their torso."
-  },
-
-  // --- HARD PHYSICAL (FIELD GOOFY ACTIONS) ---
-  {
-    id: "phys_hard_1",
+    id: "class_hard_1",
     type: "physical",
     difficulty: "hard",
-    title: "Silent Android Recharge",
-    role1_instruction: "Robot recharging protocol! Role 3 must walk in high-contrast robotic, stiff angular movements with zero sound. They must locate any pencil, pick it up stiffly, and slide it down into a desk cup without causing any clink or noise.",
+    title: "Arrange Alphabetical Names",
+    title_ar: "الترتيب الأبجدي للأسماء",
+    role1_instruction: "Sequence the team in a straight line alphabetically by their first names in total silence.",
+    role1_instruction_ar: "رتّب أعضاء فريقك في خط مستقيم أبجديًا حسب الحرف الأول من أسمائهم الأول بالكامل في صمت تام.",
     role3_interface: "none",
-    solutionNotes: "Confirm Role 3 moves rigidly like an android/robot, retrieve a pencil, and puts it in a desk mug/holder in absolute silence."
+    solutionNotes: "Verify the team is arranged perfectly in alphabetical order by first names.",
+    solutionNotes_ar: "تأكد من صحة الترتيب الأبجدي للأسماء من البداية للنهاية."
   },
   {
-    id: "phys_hard_2",
+    id: "class_hard_2",
     type: "physical",
     difficulty: "hard",
-    title: "Space Fighter Cabin Assembly",
-    role1_instruction: "The ship cabin is assembling! Align two student chairs so their backrests touch. Role 3 must sit on one facing backward. Role 2 must stand tall behind them, holding their own smartphone pointing forward with the flashlight turned ON as the main navigation rocket beam.",
+    title: "Pass Book No Hands Circle",
+    title_ar: "تمرير الكتاب بلا أيدي",
+    role1_instruction: "Form a tight circle and pass a textbook around to everyone without anyone using their hands!",
+    role1_instruction_ar: "شكلوا دائرة ضيقة ومرروا كتابًا مدرسيًا بينكم جميعًا دون أن يستخدم أي شخص يديه أبدًا!",
     role3_interface: "none",
-    solutionNotes: "Confirm two chairs are back-to-back. Role 3 sitting facing backwards on one. Role 2 stands behind holding their phone light shining forward."
+    solutionNotes: "Verify they passed the book in a circle to everyone using only forearms/elbows/etc without hands.",
+    solutionNotes_ar: "تأكد من تمرير الكتاب بنجاح بين الطلاب دون لمسه بالأيدي."
   },
   {
-    id: "phys_hard_3",
+    id: "class_hard_3",
     type: "physical",
     difficulty: "hard",
-    title: "Gravity Control Generator",
-    role1_instruction: "Gravity lock has failed! Role 3 must lean their hips sideways against a study desk, supporting their weight on only one hand. Their feet must remain glued together on the floor. While holding this post, they must raise their other arm high in the air while looking directly up at the ceiling.",
+    title: "Multi-Step Mirror Defense",
+    title_ar: "مهمة الدفاع المتتابع",
+    role1_instruction: "Executor must: 1. Put hands on head, 2. Stand on one leg on a chair, 3. Point other hand high.",
+    role1_instruction_ar: "يجب على المنفذ: ١. وضع يديه على رأسه، ٢. الوقوف على رجل واحدة على الكرسي، ٣. توجيه اليد الأخرى للأعلى.",
     role3_interface: "none",
-    solutionNotes: "Confirm Role 3 is leaning against a desk on one palm, feet side-by-side, other arm pointing straight up to the ceiling while staring open-mouthed upwards."
+    solutionNotes: "Verify Executor has hands on head while standing on one leg on a chair with the other arm pointed high.",
+    solutionNotes_ar: "تأكد من وقوف المنفذ على كرسي على ساق واحدة ممثلاً هذه الوضعية بدقة."
   }
 ];
 
@@ -338,8 +231,7 @@ async function generateMissionWithAI(type: 'technical' | 'physical', difficulty:
   
   if (!ai) {
     console.log("No Gemini API Key found. Using creative presets for absolute reliability.");
-    // Choose randomly from matching preset difficulty + type
-    const matches = PRESET_MISSIONS.filter(m => m.type === type && m.difficulty === difficulty);
+    const matches = PRESET_MISSIONS.filter(m => m.difficulty === difficulty);
     const chosen = matches.length > 0 ? matches[Math.floor(Math.random() * matches.length)] : PRESET_MISSIONS[0];
     return {
       ...chosen,
@@ -348,32 +240,32 @@ async function generateMissionWithAI(type: 'technical' | 'physical', difficulty:
     };
   }
 
-  const gridSpec = type === "technical" 
-    ? (difficulty === "easy" ? "3x3 tiles grid (array of length 9 containing strictly 0s and 1s)" : "4x4 tiles grid (array of length 16 containing strictly 0s and 1s)")
-    : "No grid needed";
+  const systemInstruction = `You are a creative, fun game master for 'GO mission' - a classroom icebreaker team game in the style of Kahoot and Blooket.
+Generate a brand new, hilarious, incredibly distinct classroom communication mission.
+Generate ONLY physical or spoken icebreaker tasks that require communication.
+CRITICAL: Do NOT generate drawings, canvas activities, shape puzzles, or grids. This is an active classroom game.
+The mission text MUST be understood in less than 5 seconds, use simple English, and be suitable for children and students. Avoid complicated or rare wording.
 
-  const systemInstruction = `You are a creative, fun game master for 'The Silent Mission' - a classroom icebreaker team game.
-Teams of three students must perform silent tasks. Role 1 knows the mission, can only gesture or draw. Role 2 translates verbally. Role 3 carries it out.
-Generate a brand new, hilarious, incredibly distinct mission matching the parameters:
-Type: ${type}
-Difficulty: ${difficulty}
-Theme/Topic: ${theme || "Standard Classic Icebreaker"}
+CRITICAL CONSTRAINT: You must write BOTH English and Arabic translations for the fields title, role1_instruction, and solutionNotes.
 
 Return a JSON object that strictly respects this TypeScript structure:
 {
   "id": "ai_gen_${difficulty}_${timestamp}",
-  "type": "${type}",
+  "type": "physical",
   "difficulty": "${difficulty}",
-  "title": "Clear, fun sci-fi or funny game name matching core theme and action",
-  "role1_instruction": "Deeply descriptive secrets. Explain what they must do. E.g. for Technical, tell them which cells are 1 (ON) and 0 (OFF). For Physical, explain the wacky room layout, poses, or drawing details. Make it VERY funny and engaging!",
-  "role3_interface": "${type === 'technical' ? (difficulty === 'easy' ? 'grid_3' : 'grid_4') : 'none'}",
-  "gridSize": ${type === 'technical' ? (difficulty === 'easy' ? 3 : 4) : 0},
-  "solutionGrid": Array of 0 and 1, length 9 (for gridSize 3) or 16 (for gridSize 4). ONLY if type is technical. Ensure the count of '1's matches the explanation! E.g. for a smile, arrow, heart, cross, or initials.,
-  "solutionNotes": "Teacher/Host guide explaining how they can check if the team finished correctly."
+  "title": "Clear, fun game name (In simple English, e.g. 'Silent Mirror Pose')",
+  "title_ar": "اسم اللعبة باللغة العربية (سهل، بسيط، وممتع)",
+  "role1_instruction": "Deeply descriptive secrets in simple, clear, easy English. Explain what they must do clearly so kids can easily follow. Keep it short (max 2 sentences)!",
+  "role1_instruction_ar": "تعليمات سرية باللغة العربية البسيطة والمفهومة للطلاب. اشرح المطلوب بأسلوب سهل وشيق ومختصر جدًا (جملتين كحد أقصى)!",
+  "role3_interface": "none",
+  "gridSize": 0,
+  "solutionGrid": [],
+  "solutionNotes": "Teacher/Host guide explaining how they can check if the team finished correctly (In simple English).",
+  "solutionNotes_ar": "دليل المعلم باللغة العربية للتأكد من صحة الحل"
 }`;
 
   try {
-    const prompt = `Create a brand new and unique ${difficulty} ${type} mission with the flavor of theme: ${theme}`;
+    const prompt = `Create a brand new and unique ${difficulty} classroom communication mission with the flavor of theme: ${theme}`;
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
       contents: prompt,
@@ -387,32 +279,37 @@ Return a JSON object that strictly respects this TypeScript structure:
             type: { type: Type.STRING },
             difficulty: { type: Type.STRING },
             title: { type: Type.STRING },
+            title_ar: { type: Type.STRING },
             role1_instruction: { type: Type.STRING },
+            role1_instruction_ar: { type: Type.STRING },
             role3_interface: { type: Type.STRING },
             gridSize: { type: Type.INTEGER },
-            solutionGrid: {
-              type: Type.ARRAY,
-              items: { type: Type.INTEGER }
-            },
-            solutionNotes: { type: Type.STRING }
+            solutionNotes: { type: Type.STRING },
+            solutionNotes_ar: { type: Type.STRING }
           },
-          required: ["id", "type", "difficulty", "title", "role1_instruction", "role3_interface", "solutionNotes"]
+          required: [
+            "id", "type", "difficulty", "title", "title_ar", 
+            "role1_instruction", "role1_instruction_ar", 
+            "role3_interface", "solutionNotes", "solutionNotes_ar"
+          ]
         }
       }
     });
 
     const bodyText = response.text?.trim() || "";
     const parsed = JSON.parse(bodyText) as Mission;
+    parsed.type = "physical"; // enforce
+    parsed.role3_interface = "none"; // enforce
     console.log("Successfully generated AI Mission:", parsed.title);
     return parsed;
   } catch (error) {
     console.error("Gemini AI generation error, building fallback mission:", error);
-    const matches = PRESET_MISSIONS.filter(m => m.type === type && m.difficulty === difficulty);
+    const matches = PRESET_MISSIONS.filter(m => m.difficulty === difficulty);
     const chosen = matches.length > 0 ? matches[Math.floor(Math.random() * matches.length)] : PRESET_MISSIONS[0];
     return {
       ...chosen,
       id: `${chosen.id}_fallback_err_${timestamp}`,
-      title: `${chosen.title} (${theme || "AI Rescued Workspace"}) (AI Fallback)`
+      title: `${chosen.title} (${theme || "AI Classroom Theme"}) (AI Fallback)`
     };
   }
 }

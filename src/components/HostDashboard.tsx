@@ -6,42 +6,62 @@
 import React, { useState } from "react";
 import { GameState } from "../types";
 import { sound } from "./AudioEngine";
-import { Play, RotateCcw, Sparkles, User, Clock, Terminal, Share2, Eye, EyeOff, Trophy, ShieldAlert, Cpu } from "lucide-react";
+import { Play, Sparkles, Clock, Eye, EyeOff, ShieldAlert, ArrowLeft, Plus, Minus, RotateCcw } from "lucide-react";
 
 interface HostDashboardProps {
   state: GameState;
   onRefresh: () => void;
+  lang?: 'en' | 'ar';
 }
 
-export default function HostDashboard({ state, onRefresh }: HostDashboardProps) {
+export default function HostDashboard({ state, onRefresh, lang = 'en' }: HostDashboardProps) {
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
-  const [missionType, setMissionType] = useState<'technical' | 'physical'>('technical');
-  const [theme, setTheme] = useState('Arcade Space Cabin 🚀');
-  const [maxRounds, setMaxRounds] = useState(3);
+  const [timerSetting, setTimerSetting] = useState<number>(90); // default starting state
   const [isInitializing, setIsInitializing] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  
-  // Added a custom state to hide the secret answer from the host screen to avoid classroom spoilers!
   const [revealSecret, setRevealSecret] = useState(false);
 
-  // Initialize and Reset state
-  async function handleInitGame(clearAll: boolean) {
+  // Set default initial timer duration on difficulty change locally
+  const handleSelectDifficulty = (diff: 'easy' | 'medium' | 'hard') => {
+    sound.playClick();
+    setDifficulty(diff);
+    const baseTime = diff === 'easy' ? 60 : (diff === 'medium' ? 90 : 120);
+    setTimerSetting(baseTime);
+  };
+
+  // Adjust local timer setting
+  const adjustTimer = (amount: number) => {
+    sound.playClick();
+    setTimerSetting((prev) => Math.max(10, prev + amount));
+  };
+
+  // Create/Initialize standard mission
+  async function handleCreateNewMission() {
     sound.playClick();
     setIsInitializing(true);
-    setRevealSecret(false); // Reset secret privacy shield
+    setRevealSecret(false);
     try {
       const res = await fetch("/api/game-state/init", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           difficulty,
-          missionType,
-          theme,
-          maxRounds,
-          clearScores: clearAll
+          missionType: "physical",
+          theme: "Classroom Challenge",
+          clearScores: false
         })
       });
       if (res.ok) {
+        // Also override max timer duration in backend state
+        await fetch("/api/game-state/init", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            difficulty,
+            missionType: "physical",
+            theme: "Classroom Challenge",
+            clearScores: false
+          })
+        });
         onRefresh();
         sound.playSuccess();
       }
@@ -52,53 +72,28 @@ export default function HostDashboard({ state, onRefresh }: HostDashboardProps) 
     }
   }
 
-  // Hot Reload AI Mission
-  async function handleGenerateAI() {
+  // Adjust scores manually (+/- 10 pts)
+  async function handleAdjustScore(teamId: 'blue' | 'red', amount: number) {
     sound.playClick();
-    setIsGenerating(true);
-    setRevealSecret(false); // Mask secret again for safety
-    try {
-      const res = await fetch("/api/game-state/trigger-ai", {
-        method: "POST"
-      });
-      if (res.ok) {
-        onRefresh();
-        sound.playSuccess();
-      } else {
-        sound.playError();
-      }
-    } catch {
-      sound.playError();
-    } finally {
-      setIsGenerating(false);
-    }
-  }
-
-  // Force Claim/Toggle a join slot for debug helper
-  async function handleClaimSlot(teamId: 'blue' | 'red', role: number) {
-    sound.playClick();
-    await fetch("/api/game-state/join", {
+    const currentScore = state.teams[teamId].score;
+    const targetScore = Math.max(0, currentScore + amount);
+    
+    // We can fetch manual score endpoint but with direct overrides
+    await fetch("/api/game-state/manual-score", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ teamId, role })
+      body: JSON.stringify({
+        teamId,
+        outcome: amount > 0 ? "manual_plus" : "manual_minus"
+      })
     });
     onRefresh();
   }
 
-  // Force Evict a join slot
-  async function handleEvictSlot(teamId: 'blue' | 'red', role: number) {
+  // Start round timer for a team
+  async function handleStartTeamRound(teamId: 'blue' | 'red') {
     sound.playClick();
-    await fetch("/api/game-state/leave", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ teamId, role })
-    });
-    onRefresh();
-  }
-
-  // Start team timer
-  async function handleStartTeam(teamId: 'blue' | 'red') {
-    sound.playClick();
+    // First update the timer setting in backend if needed or just trigger start
     await fetch("/api/game-state/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -107,8 +102,8 @@ export default function HostDashboard({ state, onRefresh }: HostDashboardProps) 
     onRefresh();
   }
 
-  // Manual host score validation for Physical challenges
-  async function handleManualOutcome(teamId: 'blue' | 'red', outcome: 'success' | 'fail') {
+  // Handle final outcome of round
+  async function handleOutcome(teamId: 'blue' | 'red', outcome: 'success' | 'fail') {
     if (outcome === 'success') {
       sound.playVictoryTheme();
     } else {
@@ -122,475 +117,356 @@ export default function HostDashboard({ state, onRefresh }: HostDashboardProps) 
     onRefresh();
   }
 
-  const joinLink = `${window.location.origin}/#/join`;
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&color=ffffff&bgcolor=0f172a&data=${encodeURIComponent(joinLink)}`;
+  const isRtl = lang === 'ar';
 
   return (
-    <div id="host-dashboard-view" className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-7xl mx-auto px-4 py-6 relative z-10 animate-fade-in text-white">
+    <div 
+      id="teacher-panel-root" 
+      className="max-w-5xl mx-auto px-4 py-8 relative z-10 animate-fade-in text-white font-sans"
+      dir={isRtl ? 'rtl' : 'ltr'}
+    >
       
-      {/* LEFT COLUMN: Setup Configuration Panel */}
-      <div className="lg:col-span-4 bg-slate-900/95 border-2 border-yellow-400/60 rounded-3xl p-6 shadow-[0_0_25px_rgba(250,204,21,0.15)] flex flex-col gap-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-400/5 blur-2xl rounded-full"></div>
+      {/* SECTION 1: GIANT KAHOOT-STYLE SCOREBOARD */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         
-        <div>
-          <div className="flex items-center gap-2 text-yellow-400 text-xs font-bold uppercase tracking-wider">
-            <Cpu size={15} className="animate-spin text-yellow-300" />
-            <span>Teacher Controls 🏫</span>
-          </div>
-          <h2 className="text-xl font-black text-white uppercase tracking-tight mt-1">
-            Setting up the Game
-          </h2>
-          <p className="text-xs text-slate-300">Set the game rules and start new missions in one click!</p>
-        </div>
-
-        {/* INPUTS SECTION */}
-        <div className="space-y-4">
-          <div>
-            <label className="text-xs font-bold text-slate-300 block mb-2">🎮 game mode</label>
-            <div className="grid grid-cols-2 gap-2">
+        {/* BLUE FOX TEAM */}
+        <div className="bg-gradient-to-br from-cyan-600 to-cyan-800 rounded-3xl p-6 shadow-[0_8px_0_#0891b2] border-4 border-slate-900 transition-transform active:translate-y-1 relative overflow-hidden">
+          <div className="absolute top-2 right-4 text-7xl opacity-10 select-none">🦊</div>
+          <div className="flex justify-between items-center relative z-10">
+            <div>
+              <span className="text-xs font-black uppercase tracking-wider text-cyan-200">
+                {isRtl ? "فريق الثعلب" : "FOX TEAM"}
+              </span>
+              <h3 className="text-4xl font-extrabold tracking-tight mt-1 text-white">
+                {state.teams.blue.score} <span className="text-xl opacity-80">{isRtl ? "نقطة" : "PTS"}</span>
+              </h3>
+            </div>
+            
+            {/* MANUAL ADJUSTMENTS */}
+            <div className="flex gap-2">
               <button
-                onClick={() => { sound.playClick(); setMissionType("technical"); }}
-                className={`py-2 px-3 rounded-xl border-2 font-black text-xs transition duration-200 cursor-pointer ${
-                  missionType === "technical"
-                    ? "bg-cyan-500/20 text-cyan-300 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.25)]"
-                    : "bg-slate-950/60 text-slate-400 border-slate-800 hover:bg-slate-800/50"
-                }`}
+                type="button"
+                onClick={() => handleAdjustScore("blue", -10)}
+                className="w-10 h-10 rounded-xl bg-slate-900/60 hover:bg-slate-900 flex items-center justify-center font-black cursor-pointer shadow border border-slate-800"
               >
-                💻 Grid Game
+                <Minus size={16} />
               </button>
               <button
-                onClick={() => { sound.playClick(); setMissionType("physical"); }}
-                className={`py-2 px-3 rounded-xl border-2 font-black text-xs transition duration-200 cursor-pointer ${
-                  missionType === "physical"
-                    ? "bg-amber-500/20 text-amber-300 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.25)]"
-                    : "bg-slate-950/60 text-slate-400 border-slate-800 hover:bg-slate-800/50"
-                }`}
+                type="button"
+                onClick={() => handleAdjustScore("blue", 10)}
+                className="w-10 h-10 rounded-xl bg-slate-900/60 hover:bg-slate-900 flex items-center justify-center font-black cursor-pointer shadow border border-slate-800"
               >
-                🏫 Active Action
+                <Plus size={16} />
               </button>
             </div>
           </div>
+        </div>
 
-          <div>
-            <label className="text-xs font-bold text-slate-300 block mb-2">⭐ difficulty</label>
-            <div className="grid grid-cols-3 gap-2">
-              {(['easy', 'medium', 'hard'] as const).map((d) => (
-                <button
-                  key={d}
-                  onClick={() => { sound.playClick(); setDifficulty(d); }}
-                  className={`py-1.5 px-2 rounded-xl border-2 capitalize text-xs font-black transition duration-200 cursor-pointer ${
-                    difficulty === d
-                      ? d === 'easy'
-                        ? 'bg-emerald-500/20 text-emerald-350 border-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.2)]'
-                        : d === 'medium'
-                        ? 'bg-amber-500/20 text-amber-350 border-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.2)]'
-                        : 'bg-rose-500/20 text-rose-350 border-rose-455 shadow-[0_0_10px_rgba(251,113,133,0.2)]'
-                      : 'bg-slate-950/60 text-slate-450 border-slate-800 hover:bg-slate-850'
-                  }`}
-                >
-                  {d}
-                </button>
-              ))}
+        {/* RED PHOENIX TEAM */}
+        <div className="bg-gradient-to-br from-pink-600 to-pink-800 rounded-3xl p-6 shadow-[0_8px_0_#db2777] border-4 border-slate-900 transition-transform active:translate-y-1 relative overflow-hidden">
+          <div className="absolute top-2 right-4 text-7xl opacity-10 select-none">🐦‍🔥</div>
+          <div className="flex justify-between items-center relative z-10">
+            <div>
+              <span className="text-xs font-black uppercase tracking-wider text-pink-200">
+                {isRtl ? "فريق الطائر" : "PHOENIX TEAM"}
+              </span>
+              <h3 className="text-4xl font-extrabold tracking-tight mt-1 text-white">
+                {state.teams.red.score} <span className="text-xl opacity-80">{isRtl ? "نقطة" : "PTS"}</span>
+              </h3>
+            </div>
+            
+            {/* MANUAL ADJUSTMENTS */}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => handleAdjustScore("red", -10)}
+                className="w-10 h-10 rounded-xl bg-slate-900/60 hover:bg-slate-900 flex items-center justify-center font-black cursor-pointer shadow border border-slate-800"
+              >
+                <Minus size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAdjustScore("red", 10)}
+                className="w-10 h-10 rounded-xl bg-slate-900/60 hover:bg-slate-900 flex items-center justify-center font-black cursor-pointer shadow border border-slate-800"
+              >
+                <Plus size={16} />
+              </button>
             </div>
           </div>
-
-          <div>
-            <label className="text-xs font-bold text-slate-300 block mb-2">🎨 game topic / theme</label>
-            <input
-              type="text"
-              value={theme}
-              onChange={(e) => setTheme(e.target.value)}
-              placeholder="e.g. Pirates, Space, Science Lab, Animals"
-              className="w-full py-2 px-3.5 rounded-xl bg-slate-950 border-2 border-slate-800 text-slate-200 text-xs focus:border-yellow-400 focus:outline-none font-sans font-bold"
-            />
-          </div>
-
-          <div className="pt-2">
-            <button
-              onClick={() => handleInitGame(true)}
-              disabled={isInitializing}
-              className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-slate-950 font-black py-2.5 px-4 rounded-xl text-xs transition duration-200 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(250,204,21,0.3)] cursor-pointer uppercase tracking-wider"
-            >
-              <RotateCcw size={14} className="stroke-slate-950 stroke-[3px]" />
-              {isInitializing ? "Creating Game..." : "Create New Mission 🎲"}
-            </button>
-          </div>
         </div>
 
-        <hr className="border-slate-850" />
-
-        {/* QR CODE BOX */}
-        <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col items-center">
-          <span className="text-[10px] text-yellow-350 uppercase tracking-widest font-black block text-center mb-2">
-            🔗 Scan to Join with Phone
-          </span>
-          <img
-            src={qrCodeUrl}
-            alt="Link details"
-            referrerPolicy="no-referrer"
-            className="w-32 h-32 border-2 border-yellow-400/40 rounded-xl p-1 bg-slate-900 shadow-inner"
-          />
-          <span className="text-[10px] text-slate-300 mt-2 break-all text-center leading-tight bg-white/5 p-1 rounded-lg border border-slate-800 w-full font-mono">
-            {joinLink}
-          </span>
-        </div>
       </div>
 
-      {/* RIGHT COLUMN: Active Game Dashboard */}
-      <div className="lg:col-span-8 flex flex-col gap-6">
+      {/* SECTION 2: SETTINGS (DIFFICULTY, TIMER & NEW GAME TRIGGER) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
         
-        {/* CURRENT ACTIVE MISSION CARD */}
-        <div className="bg-slate-900/95 border-2 border-cyan-400/50 rounded-3xl p-6 shadow-[0_0_25px_rgba(34,211,238,0.15)] relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-400/5 blur-3xl rounded-full"></div>
-          
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4 mb-4 relative z-10">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] bg-cyan-400/20 text-cyan-300 px-3 py-1 rounded-full font-sans uppercase tracking-wider border border-cyan-400/30 font-black">
-                  ⭐ Mode: {state.difficulty} {state.missionType === 'technical' ? 'Grid Game' : 'Action Game'}
+        {/* DIFFICULTY SELECTOR */}
+        <div className="lg:col-span-4 bg-slate-905 border-4 border-slate-900 rounded-[2rem] p-6 flex flex-col justify-between">
+          <div>
+            <span className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-3">
+              ⭐ {isRtl ? "درجة الصعوبة" : "DIFFICULTY LEVEL"}
+            </span>
+            <div className="flex flex-col gap-2.5">
+              <button
+                type="button"
+                onClick={() => handleSelectDifficulty('easy')}
+                className={`w-full py-3 px-4 rounded-2xl font-black text-sm uppercase transition border-b-4 text-center cursor-pointer ${
+                  difficulty === 'easy'
+                    ? "bg-emerald-500 text-slate-950 border-emerald-700 shadow-md"
+                    : "bg-slate-900 text-slate-400 border-slate-950 hover:bg-slate-850"
+                }`}
+              >
+                🟢 {isRtl ? "سهل" : "EASY"}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectDifficulty('medium')}
+                className={`w-full py-3 px-4 rounded-2xl font-black text-sm uppercase transition border-b-4 text-center cursor-pointer ${
+                  difficulty === 'medium'
+                    ? "bg-amber-500 text-slate-950 border-amber-700 shadow-md"
+                    : "bg-slate-900 text-slate-400 border-slate-950 hover:bg-slate-850"
+                }`}
+              >
+                🟡 {isRtl ? "متوسط" : "MEDIUM"}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectDifficulty('hard')}
+                className={`w-full py-3 px-4 rounded-2xl font-black text-sm uppercase transition border-b-4 text-center cursor-pointer ${
+                  difficulty === 'hard'
+                    ? "bg-rose-500 text-slate-900 border-rose-700 shadow-md"
+                    : "bg-slate-900 text-slate-400 border-slate-950 hover:bg-slate-850"
+                }`}
+              >
+                🔴 {isRtl ? "صعب" : "HARD"}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* TIMER ADJUSTMENT */}
+        <div className="lg:col-span-4 bg-slate-905 border-4 border-slate-900 rounded-[2rem] p-6 flex flex-col justify-between items-center text-center">
+          <div className="w-full">
+            <span className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-3">
+              ⏱️ {isRtl ? "مؤقت الجولة" : "TIMER PRESET"}
+            </span>
+            
+            <div className="bg-slate-950 w-full py-6 rounded-2xl border-2 border-slate-900 flex items-center justify-around">
+              <button
+                type="button"
+                onClick={() => adjustTimer(-10)}
+                className="w-12 h-12 rounded-xl bg-slate-900 hover:bg-slate-850 border-b-4 border-slate-950 active:translate-y-0.5 text-rose-450 font-black text-xl flex items-center justify-center cursor-pointer"
+              >
+                -
+              </button>
+              
+              <div className="flex flex-col">
+                <span className="text-4xl font-mono font-black text-slate-100">
+                  {timerSetting}s
+                </span>
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mt-1">
+                  {isRtl ? "مدة جولة اللعب" : "PLAYTIME LIMIT"}
                 </span>
               </div>
-              <h2 className="text-xl font-black text-white tracking-tight mt-1.5 flex items-center gap-2 uppercase">
-                <Sparkles size={20} className="text-cyan-400" />
-                {state.currentMission ? state.currentMission.title : "Ready! Create a mission first"}
-              </h2>
-            </div>
 
-            <button
-              onClick={handleGenerateAI}
-              disabled={isGenerating}
-              className="bg-purple-650 hover:bg-purple-600 border-2 border-purple-400/40 disabled:opacity-50 text-white font-black py-1.5 px-4 rounded-xl text-xs transition duration-200 flex items-center gap-1.5 shadow-md hover:shadow-purple-500/20 cursor-pointer"
-            >
-              <Sparkles size={13} className="text-purple-300" />
-              {isGenerating ? "Rewriting with AI..." : "Reroll AI Mission 🔮"}
-            </button>
+              <button
+                type="button"
+                onClick={() => adjustTimer(10)}
+                className="w-12 h-12 rounded-xl bg-slate-900 hover:bg-slate-850 border-b-4 border-slate-950 active:translate-y-0.5 text-emerald-450 font-black text-xl flex items-center justify-center cursor-pointer"
+              >
+                +
+              </button>
+            </div>
           </div>
-
-          {state.currentMission ? (
-            <div className="space-y-4 relative z-10">
-              
-              {/* Classroom Privacy Shield Banner */}
-              <div className="bg-slate-950 p-4 border border-slate-850 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">🤫</span>
-                  <div>
-                    <h4 className="text-xs font-black text-slate-200">Anti-Cheat Privacy Shield</h4>
-                    <p className="text-[11px] text-slate-400">Hide answers from your computer screen so students standing nearby can't cheat!</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => { sound.playClick(); setRevealSecret(!revealSecret); }}
-                  className={`px-4 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
-                    revealSecret 
-                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30' 
-                      : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30'
-                  }`}
-                >
-                  {revealSecret ? (
-                    <>
-                      <EyeOff size={14} />
-                      Hide Cues
-                    </>
-                  ) : (
-                    <>
-                      <Eye size={14} />
-                      Show Cues
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* MISSION INFO BLOCKS */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Visual Sender Instructs */}
-                <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl relative min-h-[140px] flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-cyan-300 uppercase tracking-widest block mb-2">
-                      🎨 1. Secret Clue for Player 1 (Painter)
-                    </span>
-                    {revealSecret ? (
-                      <p className="text-xs text-slate-200 leading-relaxed font-sans font-bold bg-white/5 p-2.5 rounded-xl border border-white/5">
-                        {state.currentMission.role1_instruction}
-                      </p>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-6 text-center text-slate-500 text-xs">
-                        <ShieldAlert size={20} className="text-slate-600 mb-1" />
-                        <span className="font-bold uppercase tracking-wider text-[10px]">[SECRET CLUES HIDDEN]</span>
-                        <span className="text-[9px] text-slate-650 mt-0.5">Click "Show Cues" above to view</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Solution Notes / Matrix Grid */}
-                <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col justify-between min-h-[140px]">
-                  <div>
-                    <span className="text-[10px] font-bold text-amber-300 uppercase tracking-widest block mb-2">
-                      🎯 2. Answer Key for Teacher / Player 2 (Speaker)
-                    </span>
-                    {revealSecret ? (
-                      <p className="text-xs text-slate-200 leading-relaxed font-sans">
-                        {state.currentMission.solutionNotes}
-                      </p>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-6 text-center text-slate-500 text-xs">
-                        <ShieldAlert size={20} className="text-slate-600 mb-1" />
-                        <span className="font-bold uppercase tracking-wider text-[10px]">[ANSWER KEY HIDDEN]</span>
-                        <span className="text-[9px] text-slate-650 mt-0.5">Click "Show Cues" above to view</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {state.currentMission.type === "technical" && state.currentMission.solutionGrid && (
-                    <div className="mt-3 pt-3 border-t border-slate-850">
-                      <span className="text-[10px] font-bold text-cyan-400 block mb-1.5 uppercase">Target Pattern structure:</span>
-                      {revealSecret ? (
-                        <div className="flex gap-1.5 flex-wrap">
-                          {state.currentMission.solutionGrid.map((val, idx) => (
-                             <div
-                               key={idx}
-                               className={`w-6 h-6 rounded-lg text-[10px] flex items-center justify-center font-black border transition-colors ${
-                                 val ? "bg-cyan-400 text-slate-950 border-cyan-300 shadow shadow-cyan-500/50" : "bg-slate-900 text-slate-600 border-slate-800"
-                               }`}
-                             >
-                               {val ? "✔" : "·"}
-                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-[9px] font-mono text-slate-600">[PATTERN HIDDEN ERROR-GUARDED]</div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-10 bg-slate-950/40 rounded-2xl border-2 border-dashed border-slate-800">
-              <Trophy size={40} className="mx-auto text-pink-500/30 mb-2 animate-pulse" />
-              <p className="text-slate-300 text-xs font-bold">Please click "Create New Mission 🎲" on the left to start the game!</p>
-            </div>
-          )}
         </div>
 
-        {/* TEAM STANDS & COCKPIT LOBBIES */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* LOBBY: SQUAD BLUE - CYBER FOXES 🦊 */}
-          <div className="bg-slate-900 border-2 border-cyan-400 rounded-3xl p-5 shadow-[0_0_20px_rgba(34,211,238,0.15)] flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-5 font-bold text-6xl select-none">🦊</div>
-            
-            <div>
-              <div className="flex justify-between items-center bg-cyan-500/10 border border-cyan-550 py-2.5 px-3.5 rounded-2xl mb-4">
-                <h3 className="text-cyan-300 text-xs font-black tracking-wider flex items-center gap-1.5 uppercase">
-                  <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></div>
-                  Fox Team 🦊
-                </h3>
-                <span className="text-xl font-black text-cyan-400">{state.teams.blue.score} Points</span>
-              </div>
-
-              {/* Player Slot Management */}
-              <div className="space-y-3">
-                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest block">Players claimed:</span>
-                {[1, 2, 3].map((role) => {
-                  const occupied = state.teams.blue.players[role];
-                  return (
-                    <div key={role} className="flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-850">
-                      <div className="flex items-center gap-2">
-                        <div className={`p-1.5 rounded-lg ${occupied ? 'bg-cyan-500/25 text-cyan-300' : 'bg-slate-900 text-slate-500'}`}>
-                          <User size={13} />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-200">
-                            {role === 1 ? "1. Painter (Draws)" : role === 2 ? "2. Speaker (Talks)" : "3. Operator (Clicks)"}
-                          </div>
-                          <div className="text-[10px] text-slate-400">
-                            {role === 1 ? "Cannot talk!" : role === 2 ? "Explains shape clues" : "Clicks the pattern"}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-1.5">
-                        {occupied ? (
-                          <button
-                            onClick={() => handleEvictSlot("blue", role)}
-                            className="bg-slate-900 hover:bg-rose-950 border border-slate-800 hover:border-rose-500 text-rose-400 px-2 py-0.5 rounded-lg text-[10px] transition duration-150 cursor-pointer font-bold"
-                          >
-                            Kick out
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleClaimSlot("blue", role)}
-                            className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-cyan-300 px-2.5 py-0.5 rounded-lg text-[10px] transition duration-150 cursor-pointer font-black"
-                          >
-                            + Claim
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Battle Control Launch for Blue */}
-            <div className="mt-5 pt-4 border-t border-slate-850">
-              {state.activeTeamId === "blue" ? (
-                <div>
-                  <div className="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl mb-3 border border-slate-800 animate-pulse">
-                    <span className="text-[10px] text-cyan-400 flex items-center gap-1.5 font-bold">
-                      <Clock size={12} /> SECONDS LEFT:
-                    </span>
-                    <span className="font-mono text-xl font-black text-rose-400">{state.roundTimer}s</span>
-                  </div>
-
-                  {state.currentMission?.type === "physical" ? (
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      <button
-                        onClick={() => handleManualOutcome("blue", "success")}
-                        className="py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:opacity-90 text-slate-950 font-black text-xs shadow-md cursor-pointer"
-                      >
-                        ✓ Correct! 🎉
-                      </button>
-                      <button
-                        onClick={() => handleManualOutcome("blue", "fail")}
-                        className="py-2 rounded-xl bg-slate-950 hover:bg-rose-955 text-rose-410 border border-slate-800 text-xs font-bold cursor-pointer"
-                      >
-                        ✗ Skip Turn ❌
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="text-center text-[10px] text-slate-400 bg-slate-950 p-2.5 border border-slate-800 rounded-xl font-bold">
-                      Waiting for Team 3 to copy the pattern!
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold">
-                    <span>Status: {state.teams.blue.status}</span>
-                    {state.teams.blue.timeUsed > 0 && <span>Time: {state.teams.blue.timeUsed}s</span>}
-                  </div>
-                  <button
-                    onClick={() => handleStartTeam("blue")}
-                    disabled={state.activeTeamId !== null}
-                    className="w-full py-2 bg-gradient-to-r from-cyan-400 to-teal-400 hover:from-cyan-300 hover:to-teal-300 disabled:opacity-50 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
-                  >
-                    <Play size={12} className="stroke-slate-950 stroke-[3px]" /> Start Blue Team's Turn! 🦊
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* LOBBY: SQUAD RED - SPACE PHOENIXES 🐦‍🔥 */}
-          <div className="bg-slate-900 border-2 border-pink-505 rounded-3xl p-5 shadow-[0_0_20px_rgba(236,72,153,0.15)] flex flex-col justify-between relative overflow-hidden animate-fade-in">
-            <div className="absolute top-0 right-0 p-4 opacity-5 font-bold text-6xl select-none font-sans">🐦‍🔥</div>
-            
-            <div>
-              <div className="flex justify-between items-center bg-rose-500/10 border border-rose-550 py-2.5 px-3.5 rounded-2xl mb-4">
-                <h3 className="text-rose-300 text-xs font-black tracking-wider flex items-center gap-1.5 uppercase">
-                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></div>
-                  Bird Team 🐦‍🔥
-                </h3>
-                <span className="text-xl font-black text-rose-455">{state.teams.red.score} Points</span>
-              </div>
-
-              {/* Player Slot Management */}
-              <div className="space-y-3">
-                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest block">Players claimed:</span>
-                {[1, 2, 3].map((role) => {
-                  const occupied = state.teams.red.players[role];
-                  return (
-                    <div key={role} className="flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-855">
-                      <div className="flex items-center gap-2">
-                        <div className={`p-1.5 rounded-lg ${occupied ? 'bg-rose-500/25 text-rose-300' : 'bg-slate-900 text-slate-500'}`}>
-                          <User size={13} />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-200">
-                            {role === 1 ? "1. Painter (Draws)" : role === 2 ? "2. Speaker (Talks)" : "3. Operator (Clicks)"}
-                          </div>
-                          <div className="text-[10px] text-slate-400">
-                            {role === 1 ? "Cannot talk!" : role === 2 ? "Explains shape clues" : "Clicks the pattern"}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-1.5">
-                        {occupied ? (
-                          <button
-                            onClick={() => handleEvictSlot("red", role)}
-                            className="bg-slate-900 hover:bg-rose-955 border border-slate-800 hover:border-rose-500 text-rose-455 px-2 py-0.5 rounded-lg text-[10px] transition duration-150 cursor-pointer font-bold"
-                          >
-                            Kick out
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleClaimSlot("red", role)}
-                            className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-rose-400 px-2.5 py-0.5 rounded-lg text-[10px] transition duration-150 cursor-pointer font-black"
-                          >
-                            + Claim
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Battle Control Launch for Red */}
-            <div className="mt-5 pt-4 border-t border-slate-855">
-              {state.activeTeamId === "red" ? (
-                <div>
-                  <div className="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl mb-3 border border-slate-800 animate-pulse">
-                    <span className="text-[10px] text-rose-455 flex items-center gap-1.5 font-bold">
-                      <Clock size={12} /> SECONDS LEFT:
-                    </span>
-                    <span className="font-mono text-xl font-black text-rose-400">{state.roundTimer}s</span>
-                  </div>
-
-                  {state.currentMission?.type === "physical" ? (
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      <button
-                        onClick={() => handleManualOutcome("red", "success")}
-                        className="py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:opacity-90 text-slate-950 font-black text-xs shadow-md cursor-pointer"
-                      >
-                        ✓ Correct! 🎉
-                      </button>
-                      <button
-                        onClick={() => handleManualOutcome("red", "fail")}
-                        className="py-2 rounded-xl bg-slate-950 hover:bg-rose-955 text-rose-410 border border-slate-800 text-xs font-bold cursor-pointer"
-                      >
-                        ✗ Skip Turn ❌
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="text-center text-[10px] text-slate-400 bg-slate-950 p-2.5 border border-slate-800 rounded-xl font-bold">
-                      Waiting for Team 3 to copy the pattern!
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between items-center text-[10px] text-slate-455 font-bold">
-                    <span>Status: {state.teams.red.status}</span>
-                    {state.teams.red.timeUsed > 0 && <span>Time: {state.teams.red.timeUsed}s</span>}
-                  </div>
-                  <button
-                    onClick={() => handleStartTeam("red")}
-                    disabled={state.activeTeamId !== null}
-                    className="w-full py-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 disabled:opacity-50 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider animate-pulse shadow-[0_0_15px_rgba(236,72,153,0.25)]"
-                  >
-                    <Play size={12} className="stroke-slate-950 stroke-[3px]" /> Start Red Team's Turn! 🐦‍🔥
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
+        {/* CREATE MISSION BUTTON */}
+        <div className="lg:col-span-4 flex flex-col justify-stretch">
+          <button
+            type="button"
+            onClick={handleCreateNewMission}
+            disabled={isInitializing}
+            className="w-full h-full min-h-[140px] bg-gradient-to-r from-yellow-450 to-amber-500 hover:from-yellow-400 hover:to-amber-450 text-slate-950 border-4 border-slate-950 shadow-[0_8px_0_#92400e] hover:shadow-[0_4px_0_#92400e] rounded-[2rem] flex flex-col items-center justify-center gap-3 transition-all active:translate-y-1 active:shadow-[0_2px_0_#92400e] cursor-pointer"
+          >
+            <Sparkles size={36} className="text-slate-900 animate-bounce" />
+            <span className="text-xl font-black uppercase tracking-tight">
+              {isInitializing ? (isRtl ? "جاري الإنشاء..." : "CREATING...") : (isRtl ? "إنشاء مهمة جديدة 🎲" : "NEW MISSION 🎲")}
+            </span>
+          </button>
         </div>
+
       </div>
+
+      {/* SECTION 3: MISSION PREVIEW & CONTROLLER */}
+      {state.currentMission ? (
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          
+          {/* CURRENT MISSION PREVIEW CARD */}
+          <div className="md:col-span-7 bg-slate-905 border-4 border-slate-900 rounded-[2.5rem] p-6 relative overflow-hidden">
+            <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-4">
+              <span className="text-xs bg-cyan-400/20 text-cyan-300 px-3.5 py-1.5 rounded-full uppercase tracking-wider font-black font-mono border border-cyan-400/30">
+                🚀 {isRtl ? "المهمة المحددة" : "CURRENT MISSION"}
+              </span>
+              
+              <button
+                type="button"
+                onClick={() => { sound.playClick(); setRevealSecret(!revealSecret); }}
+                className={`px-3 py-1.5 rounded-xl text-[11px] font-black uppercase flex items-center gap-1.5 cursor-pointer border ${
+                  revealSecret 
+                    ? "bg-rose-500/10 text-rose-300 border-rose-500/25" 
+                    : "bg-emerald-500/10 text-emerald-355 border-emerald-500/25"
+                }`}
+              >
+                {revealSecret ? (
+                  <>
+                    <EyeOff size={13} />
+                    {isRtl ? "إخفاء الحل" : "HIDE ANSWER"}
+                  </>
+                ) : (
+                  <>
+                    <Eye size={13} />
+                    {isRtl ? "إظهار الحل" : "SHOW ANSWER"}
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">
+                  {isRtl ? "اسم المهمة" : "MISSION TITLE"}
+                </h4>
+                <p className="text-2xl font-extrabold text-white tracking-tight mt-1">
+                  {lang === 'ar' ? state.currentMission.title_ar : state.currentMission.title}
+                </p>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mt-3">
+                  {isRtl ? "التعليمات السرية للمراقب" : "OBSERVER'S SECRET INSTRUCTION"}
+                </h4>
+                {revealSecret ? (
+                  <p className="text-base text-cyan-300 p-4 rounded-2xl bg-cyan-950/20 border-2 border-cyan-500/20 font-bold mt-1 select-none leading-relaxed">
+                    {lang === 'ar' ? state.currentMission.role1_instruction_ar : state.currentMission.role1_instruction}
+                  </p>
+                ) : (
+                  <div className="py-8 bg-slate-950/65 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-center mt-1 text-slate-500">
+                    <ShieldAlert size={24} className="mb-1 text-slate-600" />
+                    <span className="text-[11px] font-black uppercase tracking-wider">{isRtl ? "[التفاصيل السرية محجوبة]" : "[SECRET INSTRUCTION HIDDEN]"}</span>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mt-3">
+                  {isRtl ? "ملاحظة التقييم للمعلم" : "TEACHER ANSWER KEY"}
+                </h4>
+                {revealSecret ? (
+                  <p className="text-xs text-slate-300 font-sans font-bold leading-normal mt-1">
+                    {lang === 'ar' ? state.currentMission.solutionNotes_ar : state.currentMission.solutionNotes}
+                  </p>
+                ) : (
+                  <span className="text-[10px] text-slate-600 uppercase font-bold tracking-widest italic mt-1 block">
+                    {isRtl ? "[ملاحظة التأكيد محجوبة]" : "[SOLUTION CHECKLIST HIDDEN]"}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ACTIVE TURN CONTROLLER */}
+          <div className="md:col-span-5 flex flex-col gap-6">
+            
+            {/* NO ROUND RUNNING - START ROUNDS BUTTONS */}
+            {state.activeTeamId === null ? (
+              <div className="bg-slate-905 border-4 border-slate-900 rounded-[2.5rem] p-6 flex-1 flex flex-col justify-center">
+                <span className="text-xs font-black uppercase tracking-widest text-slate-400 text-center mb-4 block">
+                  🎮 {isRtl ? "ابدأ جولة فريق" : "START TEAM TURN"}
+                </span>
+
+                <div className="flex flex-col gap-4">
+                  <button
+                    type="button"
+                    onClick={() => handleStartTeamRound("blue")}
+                    className="w-full py-4 px-6 bg-cyan-500 hover:bg-cyan-450 border-4 border-slate-950 shadow-[0_6px_0_#0891b2] hover:shadow-[0_4px_0_#0891b2] text-slate-950 font-black text-sm uppercase rounded-2xl flex items-center justify-center gap-2 transition active:translate-y-1 active:shadow-none cursor-pointer"
+                  >
+                    <Play size={14} className="stroke-[3px]" /> 
+                    {isRtl ? "بدأ جولة فريق الثعلب 🦊" : "START FOXES (BLUE) 🦊"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleStartTeamRound("red")}
+                    className="w-full py-4 px-6 bg-pink-500 hover:bg-pink-450 border-4 border-slate-950 shadow-[0_6px_0_#db2777] hover:shadow-[0_4px_0_#db2777] text-slate-950 font-black text-sm uppercase rounded-2xl flex items-center justify-center gap-2 transition active:translate-y-1 active:shadow-none cursor-pointer"
+                  >
+                    <Play size={14} className="stroke-[3px]" /> 
+                    {isRtl ? "بدأ جولة فريق الطائر 🐦‍🔥" : "START PHOENIXES (RED) 🐦‍🔥"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* ROUND RUNNING - TIMER & SCORING OPTIONS */
+              <div className="bg-slate-905 border-4 border-slate-900 rounded-[2.5rem] p-6 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className={`p-3 rounded-2xl text-center mb-4 ${
+                    state.activeTeamId === 'blue' ? 'bg-cyan-500/10 text-cyan-300' : 'bg-pink-500/10 text-pink-300'
+                  }`}>
+                    <span className="text-[11px] font-black uppercase tracking-widest block">
+                      {isRtl ? "الفريق الذي يلعب جيرل حاليًا:" : "CURRENT RUNNING TURN:"}
+                    </span>
+                    <span className="text-lg font-black uppercase mt-1 block">
+                      {state.activeTeamId === 'blue' 
+                        ? (isRtl ? "🦊 فريق الثعلب" : "🦊 FOX TEAM BLUE") 
+                        : (isRtl ? "🐦‍🔥 فريق الطائر" : "🐦‍🔥 PHOENIX TEAM RED")
+                      }
+                    </span>
+                  </div>
+
+                  {/* PULSING TIME DISPLAY */}
+                  <div className="bg-slate-950 border-2 border-slate-905 p-6 rounded-2xl text-center animate-pulse">
+                    <span className="text-[10px] text-rose-450 font-black uppercase tracking-wider block">
+                      {isRtl ? "الوقت المتبقي" : "TIME REMAINING"}
+                    </span>
+                    <span className="text-5xl font-mono font-black text-rose-500 mt-1 block">
+                      {state.roundTimer}s
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-3 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => handleOutcome(state.activeTeamId!, 'success')}
+                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 border-4 border-slate-950 shadow-[0_6px_0_#047857] hover:shadow-[0_3px_0_#047857] hover:opacity-95 text-slate-950 font-black text-sm uppercase flex items-center justify-center gap-2 transition active:translate-y-1 active:shadow-none cursor-pointer"
+                  >
+                    ✓ {isRtl ? "إجابة صحيحة (+10) 🎉" : "CORRECT (+10) 🎉"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleOutcome(state.activeTeamId!, 'fail')}
+                    className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-850 border-b-4 border-slate-950 active:translate-y-0.5 text-rose-410 font-bold text-xs uppercase cursor-pointer text-center block"
+                  >
+                    ✗ {isRtl ? "تخطي / لم ينجح" : "SKIP / FAIL ROUND"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+          </div>
+
+        </div>
+      ) : (
+        /* SETUP INVITATION SCREEN */
+        <div className="text-center py-20 bg-slate-905 border-4 border-dashed border-slate-800 rounded-3xl">
+          <Sparkles size={48} className="mx-auto text-yellow-400 mb-4 animate-bounce" />
+          <h3 className="text-2xl font-black">{isRtl ? "بانتظار بدء اللعبة!" : "READY TO ROLL?"}</h3>
+          <p className="text-sm text-slate-400 mt-2 max-w-sm mx-auto font-bold font-sans">
+            {isRtl ? "اضغط على زر 'إنشاء مهمة جديدة' بالأعلى لبدء الفعاليات فورًا!" : "Click 'NEW MISSION' above to trigger the classroom challenge layout!"}
+          </p>
+        </div>
+      )}
+
     </div>
   );
 }

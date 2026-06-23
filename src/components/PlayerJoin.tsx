@@ -6,139 +6,198 @@
 import React from "react";
 import { GameState } from "../types";
 import { sound } from "./AudioEngine";
-import { Users, UserCheck, Zap } from "lucide-react";
+import { Users, UserCheck } from "lucide-react";
 
 interface PlayerJoinProps {
   state: GameState;
   onSelectSlot: (teamId: 'blue' | 'red', role: 1 | 2 | 3) => void;
   onRefresh: () => void;
+  lang?: 'en' | 'ar';
 }
 
-export default function PlayerJoin({ state, onSelectSlot, onRefresh }: PlayerJoinProps) {
-  
+const joinTranslations = {
+  en: {
+    roomCodeLabel: "ROOM CODE",
+    joinStatusLabel: "JOIN STATUS:",
+    playersJoined: "PLAYERS READY",
+    full: "TAKEN",
+    join: "CLAIM BASE",
+    foxTeam: "FOXES 🦊",
+    birdTeam: "PHOENIXES 🐦‍🔥",
+    roles: {
+      1: "Observer (Can see mission, cannot text/talk)",
+      2: "Messenger (Can see, can speak/signal)",
+      3: "Executor (Takes physical action)"
+    }
+  },
+  ar: {
+    roomCodeLabel: "رمز الغرفة",
+    joinStatusLabel: "حالة الانضمام:",
+    playersJoined: "لاعبين مستعدين",
+    full: "محجوز",
+    join: "احجز مقعدك",
+    foxTeam: "فريق الثعلب 🦊",
+    birdTeam: "فريق الطائر 🐦‍🔥",
+    roles: {
+      1: "المراقب (يرى المهمة بدون كلام)",
+      2: "المتحدث (يرى ويتكلم ويوجه)",
+      3: "المنفذ (يؤدي ويمثل حركياً)"
+    }
+  }
+};
+
+export default function PlayerJoin({ state, onSelectSlot, onRefresh, lang = 'en' }: PlayerJoinProps) {
+  const t = joinTranslations[lang];
+  const joinUrl = `${window.location.origin}/#/join`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&color=ffffff&bgcolor=090d16&data=${encodeURIComponent(joinUrl)}`;
+
+  // Calculate total players joined
+  let joinedCount = 0;
+  if (state.teams.blue.players[1]) joinedCount++;
+  if (state.teams.blue.players[2]) joinedCount++;
+  if (state.teams.blue.players[3]) joinedCount++;
+  if (state.teams.red.players[1]) joinedCount++;
+  if (state.teams.red.players[2]) joinedCount++;
+  if (state.teams.red.players[3]) joinedCount++;
+
   function handleSelect(teamId: 'blue' | 'red', role: 1 | 2 | 3) {
     sound.playSuccess();
     onSelectSlot(teamId, role);
   }
 
+  const isRtl = lang === 'ar';
+
   return (
-    <div className="max-w-md mx-auto px-4 py-8 text-white font-sans relative z-10 animate-fade-in">
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-gradient-to-br from-yellow-405 to-amber-500 text-slate-950 rounded-3xl mx-auto flex items-center justify-center border-2 border-white/25 mb-4 shadow-[0_0_20px_rgba(250,204,21,0.25)] animate-pulse">
-          <Zap size={28} className="fill-slate-950 stroke-slate-950" />
+    <div 
+      id="classroom-join-root" 
+      className="max-w-4xl mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-around gap-8 text-white font-sans animate-fade-in"
+      dir={isRtl ? 'rtl' : 'ltr'}
+    >
+      
+      {/* LEFT SIDE: QR CODE & ROOM ACCESS */}
+      <div className="bg-slate-905 border-4 border-slate-900 rounded-[2.5rem] p-8 text-center flex flex-col items-center justify-center max-w-sm w-full shadow-2xl relative overflow-hidden">
+        
+        {/* Room Code */}
+        <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+          {t.roomCodeLabel}
+        </span>
+        <h2 className="text-4xl font-mono font-black text-yellow-400 tracking-wider mb-5">
+          GOMISSION
+        </h2>
+
+        {/* Large QR Code */}
+        <div className="bg-slate-950 p-4 rounded-3xl border-2 border-slate-900 shadow-inner">
+          <img
+            src={qrCodeUrl}
+            alt="Scan this QR to join GO mission instantly!"
+            referrerPolicy="no-referrer"
+            className="w-48 h-48 rounded-2xl border-2 border-slate-800"
+          />
         </div>
-        <h1 className="text-2xl font-black tracking-tight uppercase">Choose Your Team 🎮</h1>
-        <p className="text-xs text-slate-350 mt-1 font-bold">Pick a team below and select a role to join the game!</p>
+
+        {/* Join Status */}
+        <div className="mt-5 bg-white/5 border border-white/10 px-5 py-2.5 rounded-2xl w-full">
+          <span className="text-[10px] text-slate-405 font-black uppercase tracking-wider block">
+            {t.joinStatusLabel}
+          </span>
+          <span className="text-xl font-black text-emerald-400 font-mono mt-0.5 block">
+            {joinedCount} / 6 {t.playersJoined}
+          </span>
+        </div>
+
       </div>
 
-      <div className="space-y-6 font-sans">
+      {/* RIGHT SIDE: TEAM ROLE ASSIGNMENTS CHOSEN */}
+      <div className="flex-1 flex flex-col gap-6 w-full max-w-lg">
         
-        {/* BLUE TEAM - CYBER FOXES 🦊 */}
-        <div className="bg-slate-900 border-2 border-cyan-405 rounded-3xl p-5 shadow-[0_0_15px_rgba(34,211,238,0.15)] relative overflow-hidden">
-          <div className="absolute -top-6 -right-6 w-24 h-24 bg-cyan-500/10 blur-xl rounded-full"></div>
-          <div className="absolute right-3 top-3 opacity-15 font-bold text-4xl select-none">🦊</div>
-          
-          <div className="flex justify-between items-center mb-4 border-b border-cyan-500/10 pb-3">
-            <h2 className="text-cyan-300 font-black tracking-wide text-sm uppercase flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></span>
-              Fox Team 🦊
-            </h2>
-            <span className="text-xs font-black text-cyan-400 bg-cyan-950/40 px-2.5 py-1 rounded-lg border border-cyan-500/20">
-              {state.teams.blue.score} Points
+        {/* BLUE FOX TEAM */}
+        <div className="bg-slate-905 border-4 border-slate-900 rounded-3xl p-5 shadow-lg relative">
+          <h3 className="text-cyan-400 font-black text-sm tracking-wide mb-3 uppercase flex items-center justify-between">
+            <span>{t.foxTeam}</span>
+            <span className="text-[10px] bg-cyan-950 border border-cyan-800 text-cyan-300 px-2 py-0.5 rounded-md font-bold">
+              {state.teams.blue.score} PTS
             </span>
-          </div>
+          </h3>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-2">
             {([1, 2, 3] as const).map((role) => {
               const occupied = state.teams.blue.players[role];
               return (
                 <button
                   key={role}
                   onClick={() => handleSelect('blue', role)}
-                  className={`w-full text-left p-3 rounded-2xl border-2 transition-all duration-200 flex items-center justify-between group cursor-pointer ${
-                    occupied 
-                      ? "bg-slate-950 border-slate-950 opacity-40 cursor-not-allowed text-slate-500" 
-                      : "bg-slate-950/65 border-slate-800 hover:border-cyan-400/50 hover:bg-slate-900/50"
-                  }`}
                   disabled={!!occupied}
+                  className={`w-full text-left p-3.5 rounded-2xl border-2 transition duration-200 flex items-center justify-between cursor-pointer ${
+                    occupied
+                      ? "bg-slate-950 border-slate-950 opacity-40 cursor-not-allowed text-slate-500"
+                      : "bg-slate-950/70 border-slate-900 hover:border-cyan-400 hover:bg-slate-900/50"
+                  }`}
+                  style={{ textAlign: isRtl ? 'right' : 'left' }}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-xl transition-colors ${
-                      occupied ? "bg-slate-950 text-slate-650" : "bg-cyan-500/10 text-cyan-300 group-hover:bg-cyan-500/20"
-                    }`}>
-                      {occupied ? <UserCheck size={15} /> : <Users size={15} />}
+                    <div className={`p-1.5 rounded-lg shrink-0 ${occupied ? 'bg-slate-900 text-slate-700' : 'bg-cyan-500/10 text-cyan-300'}`}>
+                      {occupied ? <UserCheck size={14} /> : <Users size={14} />}
                     </div>
                     <div>
-                      <h3 className="text-xs font-bold text-slate-200">
-                        {role === 1 ? "1. Painter (Draws)" : role === 2 ? "2. Speaker (Talks)" : "3. Operator (Clicks)"}
-                      </h3>
-                      <p className="text-[10px] text-slate-400 mt-0.5 font-bold">
-                        {role === 1 ? "Draw cues for your teammates. No talking!" : role === 2 ? "Explain current drawings out loud!" : "Tap the matching square pattern!"}
-                      </p>
+                      <span className="text-xs font-black block text-slate-100">
+                        {role === 1 ? (isRtl ? "١. مراقب" : "1. OBSERVER") : role === 2 ? (isRtl ? "٢. متحدث" : "2. MESSENGER") : (isRtl ? "٣. منفذ" : "3. EXECUTOR")}
+                      </span>
+                      <span className="text-[10px] text-slate-400 mt-0.5 block leading-tight font-bold">
+                        {t.roles[role]}
+                      </span>
                     </div>
                   </div>
-                  
-                  <div className={`text-[9px] px-2.5 py-1.5 rounded-xl font-bold ${
-                    occupied ? "bg-slate-800 text-slate-500" : "bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 group-hover:bg-cyan-400 group-hover:text-slate-950"
-                  }`}>
-                    {occupied ? "FULL" : "JOIN SLOT"}
-                  </div>
+
+                  <span className={`text-[10px] font-black uppercase rounded-lg px-2.5 py-1 shrink-0 ${occupied ? 'bg-slate-900 text-slate-600' : 'bg-cyan-400 text-slate-950 shadow-sm'}`}>
+                    {occupied ? t.full : t.join}
+                  </span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* RED TEAM - SPACE PHOENIXES 🐦‍🔥 */}
-        <div className="bg-slate-900 border-2 border-pink-405 rounded-3xl p-5 shadow-[0_0_15px_rgba(236,72,153,0.15)] relative overflow-hidden animate-fade-in">
-          <div className="absolute -top-6 -right-6 w-24 h-24 bg-rose-500/10 blur-xl rounded-full"></div>
-          <div className="absolute right-3 top-3 opacity-15 font-bold text-4xl select-none font-sans">🐦‍🔥</div>
-
-          <div className="flex justify-between items-center mb-4 border-b border-rose-500/10 pb-3">
-            <h2 className="text-rose-300 font-black tracking-wide text-sm uppercase flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]"></span>
-              Bird Team 🐦‍🔥
-            </h2>
-            <span className="text-xs font-black text-rose-400 bg-rose-950/40 px-2.5 py-1 rounded-lg border border-rose-500/20">
-              {state.teams.red.score} Points
+        {/* RED PHOENIX TEAM */}
+        <div className="bg-slate-905 border-4 border-slate-900 rounded-3xl p-5 shadow-lg relative">
+          <h3 className="text-pink-400 font-black text-sm tracking-wide mb-3 uppercase flex items-center justify-between">
+            <span>{t.birdTeam}</span>
+            <span className="text-[10px] bg-pink-950 border border-pink-850 text-pink-300 px-2 py-0.5 rounded-md font-bold">
+              {state.teams.red.score} PTS
             </span>
-          </div>
+          </h3>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-2">
             {([1, 2, 3] as const).map((role) => {
               const occupied = state.teams.red.players[role];
               return (
                 <button
                   key={role}
                   onClick={() => handleSelect('red', role)}
-                  className={`w-full text-left p-3 rounded-2xl border-2 transition-all duration-200 flex items-center justify-between group cursor-pointer ${
-                    occupied 
-                      ? "bg-slate-950 border-slate-950 opacity-40 cursor-not-allowed text-slate-500" 
-                      : "bg-slate-950/65 border-slate-800 hover:border-pink-400/50 hover:bg-slate-900/50"
-                  }`}
                   disabled={!!occupied}
+                  className={`w-full text-left p-3.5 rounded-2xl border-2 transition duration-200 flex items-center justify-between cursor-pointer ${
+                    occupied
+                      ? "bg-slate-950 border-slate-950 opacity-40 cursor-not-allowed text-slate-500"
+                      : "bg-slate-950/70 border-slate-900 hover:border-pink-400 hover:bg-slate-900/50"
+                  }`}
+                  style={{ textAlign: isRtl ? 'right' : 'left' }}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-xl transition-colors ${
-                      occupied ? "bg-slate-950 text-slate-650" : "bg-rose-500/10 text-rose-300 group-hover:bg-rose-500/20"
-                    }`}>
-                      {occupied ? <UserCheck size={15} /> : <Users size={15} />}
+                    <div className={`p-1.5 rounded-lg shrink-0 ${occupied ? 'bg-slate-900 text-slate-700' : 'bg-pink-500/10 text-pink-300'}`}>
+                      {occupied ? <UserCheck size={14} /> : <Users size={14} />}
                     </div>
                     <div>
-                      <h3 className="text-xs font-bold text-slate-200">
-                        {role === 1 ? "1. Painter (Draws)" : role === 2 ? "2. Speaker (Talks)" : "3. Operator (Clicks)"}
-                      </h3>
-                      <p className="text-[10px] text-slate-400 mt-0.5 font-bold">
-                        {role === 1 ? "Draw cues for your teammates. No talking!" : role === 2 ? "Explain current drawings out loud!" : "Tap the matching square pattern!"}
-                      </p>
+                      <span className="text-xs font-black block text-slate-100">
+                        {role === 1 ? (isRtl ? "١. مراقب" : "1. OBSERVER") : role === 2 ? (isRtl ? "٢. متحدث" : "2. MESSENGER") : (isRtl ? "٣. منفذ" : "3. EXECUTOR")}
+                      </span>
+                      <span className="text-[10px] text-slate-400 mt-0.5 block leading-tight font-bold">
+                        {t.roles[role]}
+                      </span>
                     </div>
                   </div>
 
-                  <div className={`text-[9px] px-2.5 py-1.5 rounded-xl font-bold ${
-                    occupied ? "bg-slate-800 text-slate-500" : "bg-rose-500/20 text-rose-300 border border-rose-455/30 group-hover:bg-rose-500 group-hover:text-slate-950"
-                  }`}>
-                    {occupied ? "FULL" : "JOIN SLOT"}
-                  </div>
+                  <span className={`text-[10px] font-black uppercase rounded-lg px-2.5 py-1 shrink-0 ${occupied ? 'bg-slate-900 text-slate-600' : 'bg-pink-400 text-slate-950 shadow-sm'}`}>
+                    {occupied ? t.full : t.join}
+                  </span>
                 </button>
               );
             })}
@@ -147,14 +206,6 @@ export default function PlayerJoin({ state, onSelectSlot, onRefresh }: PlayerJoi
 
       </div>
 
-      <div className="text-center mt-8">
-        <button
-          onClick={onRefresh}
-          className="text-xs font-bold text-yellow-400 hover:text-yellow-300 underline transition cursor-pointer"
-        >
-          Refresh Page 🔄
-        </button>
-      </div>
     </div>
   );
 }

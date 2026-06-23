@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useRef, useState, useEffect } from "react";
-import { GameState, DrawPoint } from "../types";
+import React, { useEffect } from "react";
+import { GameState } from "../types";
 import { sound } from "./AudioEngine";
-import { Clock, ShieldAlert, Paintbrush, Trash2, Mic, AlertTriangle, User } from "lucide-react";
+import { Clock, ShieldAlert, AlertTriangle, Users, Volume2, UserCheck } from "lucide-react";
 
 interface RolePlayScreenProps {
   state: GameState;
@@ -14,368 +14,204 @@ interface RolePlayScreenProps {
   role: 1 | 2 | 3;
   onExit: () => void;
   onRefresh: () => void;
+  lang: 'en' | 'ar';
 }
 
-export default function RolePlayScreen({ state, teamId, role, onExit, onRefresh }: RolePlayScreenProps) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [drawingPoints, setDrawingPoints] = useState<DrawPoint[]>([]);
+export default function RolePlayScreen({ state, teamId, role, onExit, onRefresh, lang }: RolePlayScreenProps) {
   const team = state.teams[teamId];
   
-  // 800-millisecond auto-sync loop for drawings and active grid metrics
+  // Quick background sync loop
   useEffect(() => {
     const timer = setInterval(() => {
       onRefresh();
-    }, 800);
+    }, 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Sync role 2 canvas drawings when drawing points from state update
-  useEffect(() => {
-    if (role === 2 && canvasRef.current) {
-      renderPointsOnCanvas(canvasRef.current, team.drawPoints);
-    }
-  }, [team.drawPoints, role]);
-
-  function renderPointsOnCanvas(canvas: HTMLCanvasElement, points: DrawPoint[]) {
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = teamId === 'blue' ? "#22d3ee" : "#f43f5e";
-    ctx.lineWidth = 4;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-
-    if (points.length === 0) return;
-
-    ctx.beginPath();
-    points.forEach((pt, idx) => {
-      // Scale points from normalized 0..400 matrix to actual client width
-      const x = (pt.x / 400) * canvas.width;
-      const y = (pt.y / 400) * canvas.height;
-      if (pt.isStart || idx === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    });
-    ctx.stroke();
-  }
-
-  // Draw interactions for Role 1
-  function getCoordinates(e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>): { x: number; y: number } | null {
-    const canvas = canvasRef.current;
-    if (!canvas) return null;
-    const rect = canvas.getBoundingClientRect();
-    
-    let clientX = 0;
-    let clientY = 0;
-
-    if ("touches" in e) {
-      if (e.touches.length === 0) return null;
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
-    }
-
-    // Normalized coordinates mapped to 400x400 sandbox
-    const x = ((clientX - rect.left) / rect.width) * 400;
-    const y = ((clientY - rect.top) / rect.height) * 400;
-    return { x, y };
-  }
-
-  function startDrawing(e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) {
-    e.preventDefault();
-    const pos = getCoordinates(e);
-    if (!pos) return;
-
-    setIsDrawing(true);
-    const newPt: DrawPoint = { x: pos.x, y: pos.y, isStart: true };
-    sound.playBeep(420, "triangle", 0.03, 0.04);
-
-    setDrawingPoints(prev => [...prev, newPt]);
-    syncDrawPointsToServer([newPt], false);
-  }
-
-  function draw(e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) {
-    if (!isDrawing) return;
-    e.preventDefault();
-    const pos = getCoordinates(e);
-    if (!pos) return;
-
-    const newPt: DrawPoint = { x: pos.x, y: pos.y, isStart: false };
-    setDrawingPoints(prev => [...prev, newPt]);
-    syncDrawPointsToServer([newPt], false);
-
-    if (canvasRef.current) {
-      renderPointsOnCanvas(canvasRef.current, [...drawingPoints, newPt]);
-    }
-  }
-
-  function stopDrawing() {
-    setIsDrawing(false);
-  }
-
-  async function syncDrawPointsToServer(pts: DrawPoint[], isClear: boolean) {
-    try {
-      await fetch("/api/game-state/draw", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId, points: pts, isClear })
-      });
-    } catch {}
-  }
-
-  async function clearCanvas() {
-    sound.playClick();
-    setDrawingPoints([]);
-    if (canvasRef.current) {
-      const ctx = canvasRef.current.getContext("2d");
-      ctx?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-    }
-    await syncDrawPointsToServer([], true);
-  }
-
-  // Grid interaction handlers for Role 3
-  async function handleToggleGridCell(cellIdx: number) {
-    if (team.status !== 'playing') return;
-    sound.playClick();
-    
-    const targetState = !team.technicalGrid[cellIdx];
-    try {
-      const res = await fetch("/api/game-state/grid", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId, gridIndex: cellIdx, value: targetState })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        onRefresh();
-        if (data.isMatched) {
-          sound.playVictoryTheme();
-        }
-      }
-    } catch {}
-  }
-
   const isMyTeamActive = state.activeTeamId === teamId;
   const isBlue = teamId === 'blue';
+  const isRtl = lang === 'ar';
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-6 text-white font-sans relative z-10 animate-fade-in">
+    <div 
+      id="student-role-pad-root" 
+      className="max-w-md mx-auto px-4 py-6 text-white font-sans animate-fade-in"
+      dir={isRtl ? 'rtl' : 'ltr'}
+    >
       
-      {/* HUD COMPILER BAR */}
-      <div className={`p-4 mb-6 rounded-2xl border-2 shadow-lg transition-colors ${
-        isBlue ? "bg-slate-900 border-cyan-405 shadow-[0_0_15px_rgba(34,211,238,0.15)]" : "bg-slate-900 border-pink-405 shadow-[0_0_15px_rgba(236,72,153,0.15)]"
+      {/* 1. STATE INSIGNIA HUD */}
+      <div className={`p-4 mb-6 rounded-2xl border-4 shadow-lg transition-colors border-slate-900 ${
+        isBlue ? "bg-cyan-900 shadow-cyan-950/20" : "bg-pink-900 shadow-pink-950/20"
       }`}>
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
             <span className="text-3xl select-none">{isBlue ? "🦊" : "🐦‍🔥"}</span>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-sans font-bold block">
-                Your Team:
+              <span className="text-[10px] uppercase tracking-wider text-slate-200 font-sans font-extrabold block mb-0.5">
+                {isRtl ? "فريقك الحالي:" : "YOUR TEAM:"}
               </span>
-              <h1 className="text-sm font-black uppercase text-white">
-                {isBlue ? "Fox Team 🦊" : "Bird Team 🐦‍🔥"}
+              <h1 className="text-base font-black uppercase text-white">
+                {isBlue ? (isRtl ? "🦊 فريق الثعلب" : "FOX TEAM 🦊") : (isRtl ? "🐦‍🔥 فريق الطائر" : "PHOENIX TEAM 🐦‍🔥")}
               </h1>
-              <span className={`text-[10px] font-sans font-black ${isBlue ? "text-cyan-400" : "text-rose-400"}`}>
-                Player {role}: {role === 1 ? "1. Painter (Draws)" : role === 2 ? "2. Speaker (Talks)" : "3. Operator (Clicks)"}
-              </span>
+              <div className="text-xs font-black mt-1 text-yellow-300">
+                {role === 1 ? (isRtl ? "١. المراقب" : "ROLE 1: OBSERVER") : role === 2 ? (isRtl ? "٢. المتحدث" : "ROLE 2: MESSENGER") : (isRtl ? "٣. المنفذ" : "ROLE 3: EXECUTOR")}
+              </div>
             </div>
           </div>
           
           <button
             onClick={() => { sound.playClick(); onExit(); }}
-            className="bg-slate-950 hover:bg-slate-800 border-2 border-slate-800 py-1.5 px-3 rounded-xl text-xs font-bold text-slate-300 transition cursor-pointer"
+            className="bg-slate-950 hover:bg-slate-900 border-2 border-slate-900 py-1.5 px-3 rounded-xl text-xs font-bold text-slate-300 shadow active:translate-y-0.5 cursor-pointer"
           >
-            Leave Role 🚪
+            {isRtl ? "خروج 🚪" : "LEAVE 🚪"}
           </button>
         </div>
       </div>
 
-      {/* TIMERS / LOBBY LOCK OUT */}
+      {/* 2. TURN WAITING OR ACTIVE VIEW */}
       {!isMyTeamActive ? (
-        <div className="bg-slate-900/95 border-2 border-slate-800 border-dashed p-8 rounded-3xl text-center shadow-xl flex flex-col items-center justify-center min-h-[320px] transition-all">
-          <div className="text-5xl animate-bounce mb-3">⏳</div>
-          <h2 className="text-lg font-black text-slate-300 uppercase tracking-tight">Waiting for Turn ⏰</h2>
-          <p className="text-xs text-slate-400 max-w-xs mx-auto mt-2 leading-relaxed font-sans font-bold">
-            Get ready! Your teacher will start your team's turn soon on the main screen.
-          </p>
-          <div className={`mt-6 text-xs font-bold uppercase tracking-wider px-4 py-1.5 rounded-full border ${
-            isBlue ? "bg-cyan-500/10 text-cyan-300 border-cyan-500/20" : "bg-rose-500/10 text-rose-300 border-rose-500/20"
-          }`}>
-            Status: Standby ({team.status})
+        /* STANDBY BLOCK */
+        <div className="bg-slate-905 border-4 border-slate-900 p-8 rounded-[2rem] text-center shadow-md flex flex-col items-center justify-center min-h-[280px]">
+          <div className="text-5xl animate-bounce mb-4">⏳</div>
+          <h2 className="text-lg font-black text-slate-200 uppercase tracking-wide">
+            {isRtl ? "بانتظار دورك ⏰" : "STANDBY STATUS ⏰"}
+          </h2>
+          
+          <div className="space-y-3 mt-4 text-xs leading-relaxed max-w-xs font-bold text-slate-400">
+            <p>
+              Your teacher will start your team's countdown shortly on the main classroom screen.
+            </p>
+            {isRtl && (
+              <p className="text-yellow-405" dir="rtl">
+                سيبدأ معلمك مؤقت دور فريقك قريبًا على شاشة الصف الكبيرة.
+              </p>
+            )}
           </div>
         </div>
       ) : (
+        /* ACTIVE gameplay SCREEN */
         <div className="space-y-6">
           
-          {/* SECONDS COUNTDOWN ACCENT */}
-          <div className={`p-4 rounded-2xl flex justify-between items-center transition-all border-2 ${
-            state.roundTimer <= 15 ? 'bg-rose-955/40 border-rose-500 shadow-[0_0_15px_rgba(239,68,68,0.25)] animate-pulse' : 'bg-slate-900 border-slate-800'
+          {/* TIMER HUD ELEMENT */}
+          <div className={`p-4 rounded-2xl flex justify-between items-center border-2 border-slate-900 ${
+            state.roundTimer <= 15 ? 'bg-rose-950 animate-pulse text-white' : 'bg-slate-905'
           }`}>
-            <span className="text-xs uppercase tracking-wider text-slate-300 font-bold flex items-center gap-2">
-              <Clock size={14} className={`${state.roundTimer <= 15 ? "text-rose-500 animate-spin" : "text-yellow-400"}`} /> 
-              TIME LEFT
+            <span className="text-xs uppercase tracking-wider text-slate-300 font-extrabold flex items-center gap-2">
+              <Clock size={15} className="text-yellow-400 animate-spin" />
+              {isRtl ? "الوقت المتبقي" : "TIME REMAINING"}
             </span>
-            <span className={`text-2xl font-black tracking-tight ${state.roundTimer <= 15 ? 'text-rose-450' : 'text-white'}`}>
+            <span className="text-2xl font-black font-mono">
               {state.roundTimer}s
             </span>
           </div>
 
-          {/* ROLE 1 DETAILS - SENDER DRAWS WITHOUT VOICE */}
+          {/* ROLE CARD 1: OBSERVER */}
           {role === 1 && (
-            <div className="space-y-4 font-sans">
-              <div className="bg-cyan-950/40 border-2 border-cyan-500/20 backdrop-blur-md rounded-2xl p-4">
-                <span className="text-[10px] font-black text-cyan-350 uppercase tracking-widest block mb-1">
-                  🤫 Secret rules: No talking!
+            <div className="bg-slate-905 border-4 border-slate-900 rounded-[2rem] p-6 space-y-4">
+              <div className="border-b border-white/5 pb-3">
+                <span className="text-xs bg-red-500/20 text-rose-350 border border-red-500/30 px-3 py-1 rounded-full uppercase font-black font-sans tracking-widest block text-center">
+                  🤫 {isRtl ? "مراقب سري - ممنوع الكلام!" : "SECRET OBSERVER - NO TALKING!"}
                 </span>
-                <span className="text-xs text-slate-400 block mb-2 font-bold">Do not make any sounds! Draw shape clues for your teammates below:</span>
-                <p className="text-xs text-cyan-200 font-bold bg-slate-950 p-3 rounded-xl border border-cyan-500/15 leading-relaxed whitespace-pre-wrap">
-                  {state.currentMission ? state.currentMission.role1_instruction : "Please wait..."}
-                </p>
               </div>
 
-              {/* RETRO CANVAS DRAWING COMPILER */}
-              <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-5 shadow-xl space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-300 flex items-center gap-1.5 font-bold uppercase">
-                    <Paintbrush size={14} className="text-cyan-400" /> Secret Drawing Board 🎨
-                  </span>
-                  <button
-                    onClick={clearCanvas}
-                    className="py-1 px-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-rose-400 text-xs flex items-center gap-1 font-bold transition-all cursor-pointer"
-                  >
-                    <Trash2 size={12} /> Clear Board 🧹
-                  </button>
-                </div>
-
-                <div className="bg-slate-950 border-2 border-slate-800 rounded-2xl p-1 overflow-hidden select-none">
-                  <canvas
-                    ref={canvasRef}
-                    width={400}
-                    height={300}
-                    onMouseDown={startDrawing}
-                    onMouseMove={draw}
-                    onMouseUp={stopDrawing}
-                    onMouseLeave={stopDrawing}
-                    onTouchStart={startDrawing}
-                    onTouchMove={draw}
-                    onTouchEnd={stopDrawing}
-                    className="w-full bg-slate-950 rounded-xl cursor-crosshair touch-none"
-                    style={{ minHeight: "240px" }}
-                  />
-                </div>
-                <p className="text-[10px] text-slate-400 text-center leading-normal font-bold">
-                  Draw with your finger or mouse here! Your Speaker (Player 2) sees this live in real-time.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* ROLE 2 DETAILS - MEDIATOR VOICES SKETCH INSTANTLY */}
-          {role === 2 && (
-            <div className="space-y-4 font-sans">
-              <div className="bg-amber-950/40 border-2 border-amber-500/20 backdrop-blur-md rounded-2xl p-4 flex gap-3">
-                <div className="text-3xl shrink-0">🗣️</div>
+              <div className="space-y-4">
                 <div>
-                  <span className="text-[10px] text-amber-300 uppercase tracking-wider block font-black">
-                    🗣️ Speaker: Explain the drawing!
-                  </span>
-                  <p className="text-xs text-slate-200 leading-relaxed mt-1 font-bold">
-                    Tell your teammate Operator (Player 3) which blocks to click based on the drawing below!
-                  </p>
-                  <p className="text-[10px] text-amber-400 mt-1.5 font-bold">
-                    ⚠️ Do not show them your screen! Only use your voice to explain!
-                  </p>
-                </div>
-              </div>
+                  <h4 className="text-[10px] text-slate-400 font-black tracking-widest uppercase">
+                    {isRtl ? "مهمتكم السرية للفوز:" : "YOUR SECRET TEAM MISSION:"}
+                  </h4>
+                  
+                  {/* English Mission Prompt */}
+                  <div className="bg-slate-950 p-4 rounded-2xl border border-slate-900 mt-2">
+                    <span className="text-[9px] bg-blue-500/20 text-blue-350 px-2 py-0.5 rounded uppercase font-black font-sans">🇬🇧 English</span>
+                    <p className="text-sm font-black text-white leading-relaxed mt-2 select-none">
+                      {state.currentMission ? state.currentMission.role1_instruction : "Wait for mission..."}
+                    </p>
+                  </div>
 
-              {/* DRAW PREVIEW PANEL */}
-              <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-5 shadow-xl space-y-3">
-                <span className="text-xs text-slate-300 block font-bold uppercase tracking-wide">
-                  📡 Painter's Drawing (Live):
-                </span>
-
-                <div className="bg-slate-950 border-2 border-slate-800 rounded-2xl p-1">
-                  <canvas
-                    ref={canvasRef}
-                    width={400}
-                    height={300}
-                    className="w-full bg-slate-950 rounded-xl"
-                    style={{ minHeight: "240px" }}
-                  />
+                  {/* Arabic Mission Prompt */}
+                  <div className="bg-slate-950 p-4 rounded-2xl border border-slate-900 mt-3" dir="rtl">
+                    <span className="text-[9px] bg-yellow-500/20 text-yellow-355 px-2 py-0.5 rounded uppercase font-black font-sans">🇸🇦 العربية</span>
+                    <p className="text-sm font-black text-yellow-100 leading-relaxed mt-2 select-none text-right">
+                      {state.currentMission ? state.currentMission.role1_instruction_ar : "بانتظار التحديث..."}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-[10px] text-slate-405 text-center font-bold">
-                  The drawings update automatically. Describe what you see!
-                </p>
+
+                <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl text-[11px] leading-relaxed font-bold text-yellow-405 text-center">
+                  <p>💡 Guide your Messenger (Player 2) using silent gestures, hand signs, or nods!</p>
+                  {isRtl && <p className="mt-1" dir="rtl">💡 وجّه المتحدث (اللاعب ٢) بالإشارات الصامتة أو لغة الجسد وهز الرأس فقط!</p>}
+                </div>
               </div>
             </div>
           )}
 
-          {/* ROLE 3 DETAILS - TECHNICAL CORE ACTION SELECTIONS */}
+          {/* ROLE CARD 2: MESSENGER */}
+          {role === 2 && (
+            <div className="bg-slate-905 border-4 border-slate-900 rounded-[2rem] p-6 space-y-4">
+              <div className="border-b border-white/5 pb-3">
+                <span className="text-xs bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 px-3 py-1 rounded-full uppercase font-black font-sans tracking-widest block text-center">
+                  🗣️ {isRtl ? "المتحدث - مسموح الكلام!" : "MESSENGER - TALK & CALL!"}
+                </span>
+              </div>
+
+              <div className="space-y-4 text-center">
+                <Volume2 size={40} className="mx-auto text-cyan-400 animate-bounce" />
+                
+                <h3 className="text-md font-black uppercase text-white">
+                  {isRtl ? "وجّه زميلك المنفذ!" : "GUIDE YOUR EXECUTOR!"}
+                </h3>
+
+                <div className="text-xs leading-relaxed font-bold text-slate-305 text-left space-y-3 p-4 bg-slate-950 rounded-2xl border border-slate-900">
+                  <p>
+                    🇬🇧 Look at your Observer (Player 1) who is gesturing silently. Explain those gestures out loud to your Executor (Player 3) so they perform it!
+                  </p>
+                  {isRtl && (
+                    <p className="text-cyan-305 text-right border-t border-white/5 pt-3 leading-relaxed" dir="rtl">
+                      🇸🇦 راقب زميلك المراقب (اللاعب ١) وهو يشير إليك بصمت، وتكلم بصوت مسموع لتوجه المنفذ (اللاعب ٣) لإنجاز المظهر المطلوب في الصف بالسرعة القصوى!
+                    </p>
+                  )}
+                </div>
+
+                <span className="text-[10px] text-rose-450 uppercase tracking-wider font-extrabold block">
+                  ⚠️ {isRtl ? "ممنوع النظر لشاشات زملائك!" : "NEVER PEEK AT OTHER SCREENS!"}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* ROLE CARD 3: EXECUTOR */}
           {role === 3 && (
-            <div className="space-y-4 font-sans">
-              {state.currentMission?.type === "technical" ? (
-                <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-5 shadow-xl space-y-4">
-                  <div>
-                    <span className="text-[10px] text-cyan-400 uppercase tracking-widest block font-bold">
-                      💻 Click the Target Pattern!
-                    </span>
-                    <p className="text-xs text-slate-300 mt-1 leading-relaxed font-bold">
-                      Listen carefully to Speaker's voice! Click the blocks to match the pattern they describe.
-                    </p>
-                  </div>
+            <div className="bg-slate-905 border-4 border-slate-900 rounded-[2rem] p-6 text-center space-y-5">
+              <div className="w-16 h-16 bg-pink-500/10 text-pink-400 rounded-3xl mx-auto flex items-center justify-center border-2 border-pink-500/20 animate-pulse">
+                <AlertTriangle size={28} />
+              </div>
 
-                  {/* GRID INTERACTIVE DRAW */}
-                  <div className="flex justify-center py-2">
-                    <div className={`grid gap-3 p-3 bg-slate-950 rounded-2xl border-2 border-slate-800 select-none relative ${
-                      state.currentMission.gridSize === 3 ? "grid-cols-3 max-w-[240px]" : "grid-cols-4 max-w-[300px]"
-                    }`}>
-                      {team.technicalGrid.map((val, cellIdx) => (
-                        <button
-                          key={cellIdx}
-                          onClick={() => handleToggleGridCell(cellIdx)}
-                          className={`aspect-square w-14 sm:w-16 rounded-xl border-2 transition-all duration-200 text-xs font-black flex items-center justify-center cursor-pointer ${
-                            val 
-                              ? "bg-cyan-400 text-slate-950 border-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.5)]" 
-                              : "bg-slate-900 text-slate-500 border-slate-800 hover:border-cyan-500/30 hover:bg-slate-850"
-                          }`}
-                        >
-                          {val ? "✔" : "·"}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+              <div className="space-y-3">
+                <h3 className="text-base font-black uppercase text-white">
+                  {isRtl ? "نفّذ الحركة البدنية فوراً!" : "EXECUTE THE CLASS ACTION!"}
+                </h3>
 
-                  <div className="text-center font-bold text-[10px] text-slate-400 animate-pulse">
-                    Click the matching blocks to win!
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl text-center space-y-4">
-                  <div className="w-16 h-16 bg-amber-500/10 text-amber-400 rounded-3xl mx-auto flex items-center justify-center border-2 border-amber-500/20 shadow-[0_0_12px_rgba(245,158,11,0.2)] animate-pulse">
-                    <AlertTriangle size={24} />
-                  </div>
-                  <div>
-                    <h3 className="text-md font-bold text-slate-200 uppercase tracking-tight">🏫 Complete the Action!</h3>
-                    <p className="text-xs text-slate-350 mt-2 leading-relaxed max-w-sm mx-auto font-bold">
-                      Listen to what Speaker tells you to do and perform the active action quietly!
+                <div className="bg-slate-950 p-4 rounded-2xl border border-slate-900 text-xs text-slate-350 leading-relaxed text-left space-y-3">
+                  <p>
+                    🇬🇧 Listen closely to your Messenger (Player 2) as they explain the target task. Perform the classroom movement, line-up, or action right away!
+                  </p>
+                  {isRtl && (
+                    <p className="text-pink-355 text-right border-t border-white/5 pt-3 leading-relaxed" dir="rtl">
+                      🇸🇦 استمع بانتباه لزميلك المتحدث (اللاعب ٢) وهو يشرح لك المهمة المطلوبة. افعل الحركة وجسدها بنجاح في الفصل لمشاهدة معلمك!
                     </p>
-                    <p className="text-[10px] text-slate-400 mt-4 border-t border-slate-950 pt-3 font-bold">
-                      Once you finish, smile or look at the teacher so they can award points on the screen!
-                    </p>
-                  </div>
+                  )}
                 </div>
-              )}
+
+                <p className="text-[10px] text-emerald-400 font-extrabold select-none p-1">
+                  💡 {isRtl ? "عند الانتهاء، انظر لمعلمك ليسجل النقاط!" : "WHEN DONE, LOOK AT THE TEACHER TO SCORE!"}
+                </p>
+              </div>
             </div>
           )}
 
         </div>
       )}
+
     </div>
   );
 }

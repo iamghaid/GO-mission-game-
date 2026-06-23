@@ -1,6 +1,6 @@
 {
-  "name": "The Silent Mission",
-  "description": "An interactive, multi-role communication game where teams compete to complete AI-generated physical and technical challenges under strict movement and communication constraints.",
+  "name": "GO mission",
+  "description": "A vibrant bilingual classroom communication party game modeled after Kahoot and Blooket.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
