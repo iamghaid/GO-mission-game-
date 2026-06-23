@@ -264,54 +264,70 @@ Return a JSON object that strictly respects this TypeScript structure:
   "solutionNotes_ar": "دليل المعلم باللغة العربية للتأكد من صحة الحل"
 }`;
 
-  try {
-    const prompt = `Create a brand new and unique ${difficulty} classroom communication mission with the flavor of theme: ${theme}`;
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-      config: {
-        systemInstruction,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            id: { type: Type.STRING },
-            type: { type: Type.STRING },
-            difficulty: { type: Type.STRING },
-            title: { type: Type.STRING },
-            title_ar: { type: Type.STRING },
-            role1_instruction: { type: Type.STRING },
-            role1_instruction_ar: { type: Type.STRING },
-            role3_interface: { type: Type.STRING },
-            gridSize: { type: Type.INTEGER },
-            solutionNotes: { type: Type.STRING },
-            solutionNotes_ar: { type: Type.STRING }
-          },
-          required: [
-            "id", "type", "difficulty", "title", "title_ar", 
-            "role1_instruction", "role1_instruction_ar", 
-            "role3_interface", "solutionNotes", "solutionNotes_ar"
-          ]
+  let attempts = 3;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const prompt = `Create a brand new and unique ${difficulty} classroom communication mission with the flavor of theme: ${theme}`;
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: prompt,
+        config: {
+          systemInstruction,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              id: { type: Type.STRING },
+              type: { type: Type.STRING },
+              difficulty: { type: Type.STRING },
+              title: { type: Type.STRING },
+              title_ar: { type: Type.STRING },
+              role1_instruction: { type: Type.STRING },
+              role1_instruction_ar: { type: Type.STRING },
+              role3_interface: { type: Type.STRING },
+              gridSize: { type: Type.INTEGER },
+              solutionNotes: { type: Type.STRING },
+              solutionNotes_ar: { type: Type.STRING }
+            },
+            required: [
+              "id", "type", "difficulty", "title", "title_ar", 
+              "role1_instruction", "role1_instruction_ar", 
+              "role3_interface", "solutionNotes", "solutionNotes_ar"
+            ]
+          }
         }
-      }
-    });
+      });
 
-    const bodyText = response.text?.trim() || "";
-    const parsed = JSON.parse(bodyText) as Mission;
-    parsed.type = "physical"; // enforce
-    parsed.role3_interface = "none"; // enforce
-    console.log("Successfully generated AI Mission:", parsed.title);
-    return parsed;
-  } catch (error) {
-    console.error("Gemini AI generation error, building fallback mission:", error);
-    const matches = PRESET_MISSIONS.filter(m => m.difficulty === difficulty);
-    const chosen = matches.length > 0 ? matches[Math.floor(Math.random() * matches.length)] : PRESET_MISSIONS[0];
-    return {
-      ...chosen,
-      id: `${chosen.id}_fallback_err_${timestamp}`,
-      title: `${chosen.title} (${theme || "AI Classroom Theme"}) (AI Fallback)`
-    };
+      const bodyText = response.text?.trim() || "";
+      const parsed = JSON.parse(bodyText) as Mission;
+      parsed.type = "physical"; // enforce
+      parsed.role3_interface = "none"; // enforce
+      console.log("Successfully generated AI Mission:", parsed.title);
+      return parsed;
+    } catch (error) {
+      console.warn(`Gemini AI generation attempt ${i + 1} failed:`, error);
+      if (i === attempts - 1) {
+        console.error("All Gemini AI generation attempts failed, using fallback mission.");
+        const matches = PRESET_MISSIONS.filter(m => m.difficulty === difficulty);
+        const chosen = matches.length > 0 ? matches[Math.floor(Math.random() * matches.length)] : PRESET_MISSIONS[0];
+        return {
+          ...chosen,
+          id: `${chosen.id}_fallback_err_${timestamp}`,
+          title: `${chosen.title} (${theme || "AI Classroom Theme"}) (AI Fallback)`
+        };
+      }
+      // Wait before next attempt (exponential backoff: 500ms, then 1000ms)
+      await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, i)));
+    }
   }
+  // Fallback signature to satisfy typescript return-type check
+  const matches = PRESET_MISSIONS.filter(m => m.difficulty === difficulty);
+  const chosen = matches.length > 0 ? matches[Math.floor(Math.random() * matches.length)] : PRESET_MISSIONS[0];
+  return {
+    ...chosen,
+    id: `${chosen.id}_fallback_err_unreachable_${timestamp}`,
+    title: `${chosen.title} (${theme || "AI Classroom Theme"}) (AI Fallback)`
+  };
 }
 
 // ----- REST API ENDPOINTS -----

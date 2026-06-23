@@ -78,28 +78,36 @@ export default function HostDashboard({ state, onRefresh, lang = 'en' }: HostDas
     const currentScore = state.teams[teamId].score;
     const targetScore = Math.max(0, currentScore + amount);
     
-    // We can fetch manual score endpoint but with direct overrides
-    await fetch("/api/game-state/manual-score", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        teamId,
-        outcome: amount > 0 ? "manual_plus" : "manual_minus"
-      })
-    });
-    onRefresh();
+    try {
+      // We can fetch manual score endpoint but with direct overrides
+      await fetch("/api/game-state/manual-score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          teamId,
+          outcome: amount > 0 ? "manual_plus" : "manual_minus"
+        })
+      });
+      onRefresh();
+    } catch (e) {
+      console.error("Score adjustment failed:", e);
+    }
   }
 
   // Start round timer for a team
   async function handleStartTeamRound(teamId: 'blue' | 'red') {
     sound.playClick();
-    // First update the timer setting in backend if needed or just trigger start
-    await fetch("/api/game-state/start", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ teamId })
-    });
-    onRefresh();
+    try {
+      // First update the timer setting in backend if needed or just trigger start
+      await fetch("/api/game-state/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamId })
+      });
+      onRefresh();
+    } catch (e) {
+      console.error("Start team round failed:", e);
+    }
   }
 
   // Handle final outcome of round
@@ -109,12 +117,16 @@ export default function HostDashboard({ state, onRefresh, lang = 'en' }: HostDas
     } else {
       sound.playError();
     }
-    await fetch("/api/game-state/manual-score", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ teamId, outcome })
-    });
-    onRefresh();
+    try {
+      await fetch("/api/game-state/manual-score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamId, outcome })
+      });
+      onRefresh();
+    } catch (e) {
+      console.error("Set round outcome failed:", e);
+    }
   }
 
   const isRtl = lang === 'ar';
