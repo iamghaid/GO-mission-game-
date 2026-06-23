@@ -48,7 +48,10 @@ const joinTranslations = {
 
 export default function PlayerJoin({ state, onSelectSlot, onRefresh, lang = 'en' }: PlayerJoinProps) {
   const t = joinTranslations[lang];
-  const joinUrl = `${window.location.origin}/#/join`;
+  const cleanPathname = window.location.pathname.endsWith('/') 
+    ? window.location.pathname 
+    : window.location.pathname + '/';
+  const joinUrl = `${window.location.origin}${cleanPathname}#/join`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&color=ffffff&bgcolor=090d16&data=${encodeURIComponent(joinUrl)}`;
 
   // Calculate total players joined
