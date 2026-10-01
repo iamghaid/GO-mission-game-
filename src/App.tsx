@@ -70,7 +70,7 @@ export default function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [currentView, setCurrentView] = useState<'lobby' | 'host' | 'projector' | 'join'>('lobby');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [lang, setLang] = useState<'en' | 'ar'>(() => (localStorage.getItem("go_mission_lang") as 'en' | 'ar') || 'ar');
+  const [lang, setLang] = useState<'en' | 'ar'>(() => localStorage.getItem("go_mission_lang") === "ar" ? "ar" : "en");
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => localStorage.getItem("go_mission_theme") === "light" ? "light" : "dark");
   useEffect(() => { localStorage.setItem("go_mission_theme", theme); document.documentElement.style.colorScheme = theme; }, [theme]);
@@ -78,6 +78,7 @@ export default function App() {
   // Persist language
   useEffect(() => {
     localStorage.setItem("go_mission_lang", lang);
+    document.documentElement.lang = lang;
   }, [lang]);
   // Persisted local player role slot
   const [userTeam, setUserTeam] = useState<'blue' | 'red' | null>(null);
