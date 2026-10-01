@@ -1,4 +1,4 @@
-.mission-app{--ink:#142b44;--muted:#667486;--paper:#f7f8fa;--accent:#fa784e;min-height:100vh;background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans Arabic",Arial,"Segoe UI",Tahoma,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+.mission-app{--ink:#142b44;--muted:#667486;--paper:#f7f8fa;--accent:#fa784e;min-height:100vh;background:var(--paper);color:var(--ink);font-family:"Thmanyah Local","IBM Plex Sans Arabic",Arial,"Segoe UI",Tahoma,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
 .mission-app button,.mission-app a{-webkit-tap-highlight-color:transparent}.mission-app button{cursor:pointer}.mission-app button:focus-visible,.mission-app a:focus-visible{outline:3px solid var(--accent);outline-offset:5px}.mission-app ::selection{background:#ffcfb7;color:var(--ink)}
 .mission-skip{position:fixed;top:-80px;inset-inline-start:20px;padding:12px;background:var(--ink);color:white;z-index:100}.mission-skip:focus{top:10px}
 .mission-header{max-width:1260px;margin:auto;min-height:100px;padding:20px 40px;display:flex;align-items:center;gap:40px;border-bottom:1px solid #e2e6eb}
@@ -20,3 +20,23 @@
 .mission-game-panel div[class*="bg-gradient"]{background-color:#1c324b!important;border-color:#314860!important}.mission-game-panel button[class*="bg-gradient"]{background-color:#f4ae89!important;color:#142b44!important;border-color:#f4ae89!important}.mission-game-panel button[class*="bg-gradient"]:hover{background-color:#ffbd98!important}
 
 .mission-brand-image{display:block;width:210px;height:80px;object-fit:contain}.mission-footer-logo{width:155px;height:60px;object-fit:contain}@media(max-width:720px){.mission-brand-image{width:165px;height:62px}.mission-header{padding-top:10px;padding-bottom:12px;gap:8px}}
+
+.mission-header-controls{display:flex;align-items:center;gap:8px}.mission-theme{width:38px;height:38px;display:grid;place-items:center;border:1px solid #d8dfe7;border-radius:8px;background:transparent;color:inherit}
+.mission-app[data-theme=dark]{--ink:#edf3fc;--muted:#a6b5c9;--paper:#0b1421;--accent:#ff9265;color-scheme:dark}
+.mission-app[data-theme=dark] .mission-header,.mission-app[data-theme=dark] .mission-intro-strip{border-color:#29394c}
+.mission-app[data-theme=dark] .mission-brand-image,.mission-app[data-theme=dark] .mission-footer-logo{background:#f2f4f7;border-radius:12px;padding:5px 9px}
+.mission-app[data-theme=dark] .mission-navigation button,.mission-app[data-theme=dark] .mission-eyebrow,.mission-app[data-theme=dark] .mission-hero-meta,.mission-app[data-theme=dark] .mission-intro-strip{color:#a6b5c9}
+.mission-app[data-theme=dark] .mission-navigation .active,.mission-app[data-theme=dark] .mission-navigation button:hover,.mission-app[data-theme=dark] .mission-entry-card:hover{background:#213249;color:#f0f5fc}
+.mission-app[data-theme=dark] .mission-language,.mission-app[data-theme=dark] .mission-theme,.mission-app[data-theme=dark] .mission-button.secondary{border-color:#405168;color:#edf3fc}
+.mission-app[data-theme=dark] .mission-button.primary{background:#ffa278;border-color:#ffa278;color:#142b44}.mission-app[data-theme=dark] .mission-button.primary:hover{background:#ffb491}
+.mission-app[data-theme=dark] .mission-hero h1 span{color:#90aacb}
+.mission-app[data-theme=dark] .mission-visual{background:#152438;border-color:#30435a;box-shadow:none}
+.mission-app[data-theme=dark] .mission-target>div{border-color:#415976}.mission-app[data-theme=dark] .mission-target>div:nth-child(3){background:#233b56;border-color:#496482}
+.mission-app[data-theme=dark] .mission-secret,.mission-app[data-theme=dark] .mission-visual-flow>span,.mission-app[data-theme=dark] .mission-role-card,.mission-app[data-theme=dark] .mission-connection{background:#162337;border-color:#30425a;box-shadow:none}
+.mission-app[data-theme=dark] .mission-secret-icon,.mission-app[data-theme=dark] .mission-role-icon,.mission-app[data-theme=dark] .mission-connection-icon{background:#263a52;color:#b7cee8}
+.mission-app[data-theme=dark] .mission-secret-tag{background:#513629;color:#ffb695}.mission-app[data-theme=dark] .mission-visual-flow>span:last-child{background:#f6a27c;color:#142b44;border-color:#f6a27c}
+.mission-app[data-theme=dark] .mission-visual-top,.mission-app[data-theme=dark] .mission-visual-bottom,.mission-app[data-theme=dark] .mission-secret small,.mission-app[data-theme=dark] .mission-role-number{color:#a2b4ca}
+.mission-app[data-theme=dark] .mission-play-chip{background:#2c4057;color:#bfd2e9}.mission-app[data-theme=dark] .mission-entry-card{border-color:#30425a}
+.mission-app[data-theme=dark] .mission-sound-bar{background:#192b40}.mission-app[data-theme=dark] .mission-sound-bar small{color:#a6b5c9}.mission-app[data-theme=dark] .mission-sound-buttons button{border-color:#455d78}.mission-app[data-theme=dark] .mission-sound-buttons button:hover{background:#2b4058}
+.mission-app[data-theme=dark] .mission-footer{background:#101c2c;border-color:#29394c}.mission-app[data-theme=dark] .mission-footer-top,.mission-app[data-theme=dark] .mission-developer{color:#a6b5c9}.mission-app[data-theme=dark] .mission-status{color:#8ed8b8}.mission-app[data-theme=dark] .mission-status.disconnected{color:#ffb18e}
+@media(max-width:720px){.mission-header-controls{justify-self:end}.mission-app[data-theme=dark] .mission-entry-card{background:#162337}}

@@ -363,6 +363,9 @@ app.post("/api/game-state/grid", (req, res) => {
   }
 
   const team = currentGame().state.teams[teamId];
+  if (!Number.isInteger(gridIndex) || gridIndex < 0 || gridIndex >= team.technicalGrid.length || ![0, 1, false, true].includes(value)) {
+    return res.status(400).json({ error: "Invalid grid cell" });
+  }
   if (gridIndex >= 0 && gridIndex < team.technicalGrid.length) {
     team.technicalGrid[gridIndex] = value ? 1 : 0;
   }
@@ -406,6 +409,7 @@ app.post("/api/game-state/grid", (req, res) => {
 // Host manually stamps a physical mission result
 app.post("/api/game-state/manual-score", (req, res) => {
   const { teamId, outcome } = req.body; // 'success' or 'fail'
+  if (outcome !== 'success' && outcome !== 'fail') return res.status(400).json({ error: 'Invalid outcome' });
   if (teamId !== "blue" && teamId !== "red") {
     return res.status(400).json({ error: "Invalid team" });
   }

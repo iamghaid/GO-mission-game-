@@ -57,6 +57,8 @@ test('Vercel migration retains shared roles and deadline-based rounds without Go
     assert.equal(expired.roundTimer, 0);
     assert.equal(expired.timerRunning, false);
     assert.equal(expired.teams.blue.status, 'failed');
+    assert.equal((await post('grid', { teamId: 'blue', gridIndex: 0.5, value: 1 })).status, 400);
+    assert.equal((await post('manual-score', { teamId: 'blue', outcome: 'invalid' })).status, 400);
     delete process.env.KV_REST_API_TOKEN;
     assert.equal((await realFetch(`${origin}/api/game-state`)).status, 503);
   } finally {

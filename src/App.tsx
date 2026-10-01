@@ -10,7 +10,7 @@ import HostDashboard from "./components/HostDashboard";
 import ProjectorScreen from "./components/ProjectorScreen";
 import PlayerJoin from "./components/PlayerJoin";
 import RolePlayScreen from "./components/RolePlayScreen";
-import { ArrowUpRight, Radio, RefreshCw, Globe2 } from "lucide-react";
+import { ArrowUpRight, Radio, RefreshCw, Globe2, Moon, Sun } from "lucide-react";
 import Welcome from "./components/Welcome";
 import "./design.css";
 
@@ -71,6 +71,9 @@ export default function App() {
   const [currentView, setCurrentView] = useState<'lobby' | 'host' | 'projector' | 'join'>('lobby');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [lang, setLang] = useState<'en' | 'ar'>(() => (localStorage.getItem("go_mission_lang") as 'en' | 'ar') || 'ar');
+
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => localStorage.getItem("go_mission_theme") === "light" ? "light" : "dark");
+  useEffect(() => { localStorage.setItem("go_mission_theme", theme); document.documentElement.style.colorScheme = theme; }, [theme]);
 
   // Persist language
   useEffect(() => {
@@ -148,8 +151,11 @@ export default function App() {
     return () => window.removeEventListener('hashchange', checkAutoJoin);
   }, []);
 
-  // Central fast-sync polling fetch engine (updates every 800ms)
+  const syncInFlight = useRef(false);
+  // Keep only one sync request in flight to avoid out-of-order state.
   const syncGameState = async () => {
+    if (syncInFlight.current) return;
+    syncInFlight.current = true;
     try {
       const res = await fetch("/api/game-state");
       if (res.ok) {
@@ -166,14 +172,14 @@ export default function App() {
       }
     } catch (e) {
       setErrorMessage("Could not connect to host local server.");
-    }
+    } finally { syncInFlight.current = false; }
   };
 
   useEffect(() => {
     syncGameState();
-    const interval = setInterval(syncGameState, 800);
+    const interval = setInterval(() => { if (document.visibilityState === "visible" && currentView !== "lobby") void syncGameState(); }, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [currentView]);
 
   // Handle student lobby slot claims
   const handleSelectSlot = async (teamId: 'blue' | 'red', role: 1 | 2 | 3) => {
@@ -228,7 +234,7 @@ export default function App() {
     { view: 'projector' as const, label: isArabic ? 'شاشة العرض' : 'Class display' }
   ];
   return (
-    <div className="mission-app" dir={isArabic ? 'rtl' : 'ltr'}>
+    <div className="mission-app" data-theme={theme} dir={isArabic ? 'rtl' : 'ltr'}>
       <a className="mission-skip" href="#mission-main">{isArabic ? 'انتقل إلى المحتوى' : 'Skip to content'}</a>
       <header className="mission-header">
         <button className="mission-brand" onClick={() => setView('lobby')} aria-label={isArabic ? 'GO Mission الرئيسية' : 'GO Mission home'}>
@@ -237,7 +243,8 @@ export default function App() {
         <nav className="mission-navigation" aria-label={isArabic ? 'التنقل الرئيسي' : 'Main navigation'}>
           {navigation.map(item => <button key={item.view} aria-current={currentView === item.view ? 'page' : undefined} className={currentView === item.view ? 'active' : ''} onClick={() => setView(item.view)}>{item.label}</button>)}
         </nav>
-        <button className="mission-language" onClick={() => setLang(isArabic ? 'en' : 'ar')} aria-label={isArabic ? 'Switch to English' : 'التبديل إلى العربية'}><Globe2 size={17}/>{isArabic ? 'EN' : 'العربية'}</button>
+        <div className="mission-header-controls"><button className="mission-theme" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label={isArabic ? (theme === 'dark' ? 'تفعيل المظهر الفاتح' : 'تفعيل المظهر الداكن') : (theme === 'dark' ? 'Use light theme' : 'Use dark theme')} title={isArabic ? 'تغيير المظهر' : 'Change theme'}>{theme === 'dark' ? <Sun size={18}/> : <Moon size={18}/>}</button>
+        <button className="mission-language" onClick={() => setLang(isArabic ? 'en' : 'ar')} aria-label={isArabic ? 'Switch to English' : 'التبديل إلى العربية'}><Globe2 size={17}/>{isArabic ? 'EN' : 'العربية'}</button></div>
       </header>
       <main id="mission-main">
         {currentView === 'lobby' ? <Welcome lang={lang} onNavigate={setView} /> : (
