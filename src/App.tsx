@@ -10,7 +10,7 @@ import HostDashboard from "./components/HostDashboard";
 import ProjectorScreen from "./components/ProjectorScreen";
 import PlayerJoin from "./components/PlayerJoin";
 import RolePlayScreen from "./components/RolePlayScreen";
-import { ArrowUpRight, Radio, RefreshCw, Globe2, Zap } from "lucide-react";
+import { ArrowUpRight, Radio, RefreshCw, Globe2 } from "lucide-react";
 import Welcome from "./components/Welcome";
 import "./design.css";
 
@@ -232,8 +232,7 @@ export default function App() {
       <a className="mission-skip" href="#mission-main">{isArabic ? 'انتقل إلى المحتوى' : 'Skip to content'}</a>
       <header className="mission-header">
         <button className="mission-brand" onClick={() => setView('lobby')} aria-label={isArabic ? 'GO Mission الرئيسية' : 'GO Mission home'}>
-          <span className="mission-brand-icon"><Zap size={22} fill="currentColor" /></span>
-          <span dir="ltr">GO<span className="mission-brand-word">MISSION<span className="mission-brand-dot">.</span></span></span>
+          <img className="mission-brand-image" src="/go-mission-logo.png" alt="GO Mission" width="210" height="80" />
         </button>
         <nav className="mission-navigation" aria-label={isArabic ? 'التنقل الرئيسي' : 'Main navigation'}>
           {navigation.map(item => <button key={item.view} aria-current={currentView === item.view ? 'page' : undefined} className={currentView === item.view ? 'active' : ''} onClick={() => setView(item.view)}>{item.label}</button>)}
@@ -261,7 +260,7 @@ export default function App() {
         )}
       </main>
       <footer className="mission-footer">
-        <div className="mission-footer-top"><span className="mission-footer-brand" dir="ltr">GO MISSION.</span><p>{isArabic ? 'مهمة واحدة. أدوار مختلفة. فريق أقوى.' : 'One mission. Different roles. A stronger team.'}</p><span className="mission-footer-note">{isArabic ? 'مصمّمة للحظات التي تجمعنا' : 'Made for the moments that bring us together'}</span></div>
+        <div className="mission-footer-top"><img className="mission-footer-logo" src="/go-mission-logo.png" alt="GO Mission" width="155" height="60" loading="lazy"/><p>{isArabic ? 'مهمة واحدة. أدوار مختلفة. فريق أقوى.' : 'One mission. Different roles. A stronger team.'}</p><span className="mission-footer-note">{isArabic ? 'مصمّمة للحظات التي تجمعنا' : 'Made for the moments that bring us together'}</span></div>
         <div className="mission-developer"><span>{isArabic ? 'حسابات المطوّرة' : 'Developer profiles'}</span>
           <nav aria-label="Developer profiles" className="flex items-center gap-3">
             <a href="https://github.com/iamghaid" target="_blank" rel="noopener noreferrer" aria-label="GitHub — Gheid Abdulkarim" title="GitHub — Gheid Abdulkarim" style={{backgroundColor: "transparent", color: "inherit"}} className="inline-flex h-[46px] w-[46px] items-center justify-center rounded-lg border border-current hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"><svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true"><path fill="none" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" d="M12 .75a11.25 11.25 0 0 0-3.56 21.92c.56.1.77-.24.77-.54v-2.1c-3.13.68-3.79-1.33-3.79-1.33-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.68.08-.68 1.13.08 1.73 1.16 1.73 1.16 1 1.72 2.63 1.22 3.27.93.1-.73.39-1.22.71-1.5-2.5-.28-5.13-1.25-5.13-5.56 0-1.23.44-2.23 1.16-3.02-.12-.28-.5-1.43.11-2.98 0 0 .95-.3 3.1 1.15a10.8 10.8 0 0 1 5.62 0c2.15-1.46 3.1-1.15 3.1-1.15.62 1.55.23 2.7.12 2.98.72.79 1.15 1.79 1.15 3.02 0 4.32-2.63 5.27-5.14 5.55.4.35.76 1.03.76 2.08v3.1c0 .3.2.65.78.54A11.25 11.25 0 0 0 12 .75Z"/></svg></a>

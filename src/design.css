@@ -18,3 +18,5 @@
 .mission-app[dir=rtl] .mission-eyebrow,.mission-app[dir=rtl] .mission-visual-top,.mission-app[dir=rtl] .mission-visual-bottom{letter-spacing:0}
 
 .mission-game-panel div[class*="bg-gradient"]{background-color:#1c324b!important;border-color:#314860!important}.mission-game-panel button[class*="bg-gradient"]{background-color:#f4ae89!important;color:#142b44!important;border-color:#f4ae89!important}.mission-game-panel button[class*="bg-gradient"]:hover{background-color:#ffbd98!important}
+
+.mission-brand-image{display:block;width:210px;height:80px;object-fit:contain}.mission-footer-logo{width:155px;height:60px;object-fit:contain}@media(max-width:720px){.mission-brand-image{width:165px;height:62px}.mission-header{padding-top:10px;padding-bottom:12px;gap:8px}}
