@@ -40,3 +40,34 @@
 .mission-app[data-theme=dark] .mission-sound-bar{background:#192b40}.mission-app[data-theme=dark] .mission-sound-bar small{color:#a6b5c9}.mission-app[data-theme=dark] .mission-sound-buttons button{border-color:#455d78}.mission-app[data-theme=dark] .mission-sound-buttons button:hover{background:#2b4058}
 .mission-app[data-theme=dark] .mission-footer{background:#101c2c;border-color:#29394c}.mission-app[data-theme=dark] .mission-footer-top,.mission-app[data-theme=dark] .mission-developer{color:#a6b5c9}.mission-app[data-theme=dark] .mission-status{color:#8ed8b8}.mission-app[data-theme=dark] .mission-status.disconnected{color:#ffb18e}
 @media(max-width:720px){.mission-header-controls{justify-self:end}.mission-app[data-theme=dark] .mission-entry-card{background:#162337}}
+/* Transparent artwork adapts to the surrounding theme. */
+.mission-brand-image,.mission-footer-logo{transition:filter .35s ease,transform .35s ease}
+.mission-app[data-theme=dark] .mission-brand-image,.mission-app[data-theme=dark] .mission-footer-logo{filter:invert(1) hue-rotate(180deg) saturate(.85) brightness(1.12)}
+.mission-brand:hover .mission-brand-image{transform:translateY(-2px) rotate(-2deg)}
+.mission-hero{position:relative;isolation:isolate}
+.mission-hero::before{content:"";position:absolute;z-index:-1;pointer-events:none;inset:5% 4% 12%;background:radial-gradient(ellipse at 15% 65%,#fa784e0c,transparent 55%),radial-gradient(ellipse at 85% 20%,#618cc212,transparent 50%)}
+.mission-hero-copy{animation:mission-arrive .7s ease-out both}
+.mission-visual{animation:mission-arrive .85s .1s ease-out both}
+.mission-visual::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 20% 80%,#fa784e18,transparent 55%),radial-gradient(ellipse at 85% 20%,#779ec127,transparent 60%);animation:mission-color-drift 12s ease-in-out infinite alternate}
+.mission-secret{animation:mission-secret-float 7s ease-in-out infinite}
+.mission-target>div:first-child{animation:mission-ring 6s ease-in-out infinite}
+.mission-target>div:nth-child(2){animation:mission-ring 6s 1s ease-in-out infinite}
+.mission-visual-flow>span{animation:mission-role-signal 4.5s ease-in-out infinite}
+.mission-visual-flow>span:nth-of-type(2){animation-delay:1.5s}.mission-visual-flow>span:nth-of-type(3){animation-delay:3s}
+.mission-visual-flow>i{position:relative;overflow:visible}
+.mission-visual-flow>i::after{content:"";position:absolute;left:0;top:-3px;width:5px;height:5px;border-radius:50%;background:var(--accent);animation:mission-message 3s ease-in-out infinite}
+.mission-visual-flow>i:nth-of-type(2)::after{animation-delay:1.5s}
+.mission-role-card{transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
+.mission-role-card:hover{transform:translateY(-5px);border-color:var(--accent);box-shadow:0 12px 28px #142b4410}
+.mission-role-card:nth-child(2) .mission-role-icon{color:#c4774f;background:#fa784e12}.mission-role-card:nth-child(3) .mission-role-icon{color:#53877b;background:#53877b14}
+.mission-app[data-theme=dark] .mission-role-card:nth-child(2) .mission-role-icon{color:#ffb18e;background:#fa784e18}.mission-app[data-theme=dark] .mission-role-card:nth-child(3) .mission-role-icon{color:#97d4c2;background:#53877b20}
+.mission-button svg,.mission-entry-card svg,.mission-navigation button{transition:transform .25s ease,color .25s ease,background .25s ease}
+.mission-button:hover>svg:last-child,.mission-entry-card:hover>span svg{transform:translate(2px,-2px)}
+.mission-app[data-theme=dark] .mission-hero h1 span{color:#a2bada}
+@keyframes mission-arrive{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes mission-secret-float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-7px) rotate(-2deg)}}
+@keyframes mission-ring{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.07);opacity:1}}
+@keyframes mission-role-signal{0%,35%,100%{transform:translateY(0)}15%{transform:translateY(-5px);box-shadow:0 6px 20px #fa784e20}}
+@keyframes mission-message{0%{transform:translateX(0);opacity:0}15%,75%{opacity:1}100%{transform:translateX(42px);opacity:0}}
+@keyframes mission-color-drift{from{opacity:.4;transform:translateY(-8px)}to{opacity:1;transform:translateY(8px)}}
+@media(prefers-reduced-motion:reduce){.mission-app *,.mission-app *::before,.mission-app *::after{animation:none!important;transition:none!important}.mission-role-card:hover,.mission-brand:hover .mission-brand-image{transform:none}}
