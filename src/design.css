@@ -24,7 +24,7 @@
 .mission-header-controls{display:flex;align-items:center;gap:8px}.mission-theme{width:38px;height:38px;display:grid;place-items:center;border:1px solid #d8dfe7;border-radius:8px;background:transparent;color:inherit}
 .mission-app[data-theme=dark]{--ink:#edf3fc;--muted:#a6b5c9;--paper:#0b1421;--accent:#ff9265;color-scheme:dark}
 .mission-app[data-theme=dark] .mission-header,.mission-app[data-theme=dark] .mission-intro-strip{border-color:#29394c}
-.mission-app[data-theme=dark] .mission-brand-image,.mission-app[data-theme=dark] .mission-footer-logo{background:#f2f4f7;border-radius:12px;padding:5px 9px}
+.mission-app[data-theme=dark] .mission-brand-image,.mission-app[data-theme=dark] .mission-footer-logo{background:transparent;border-radius:0;padding:0}
 .mission-app[data-theme=dark] .mission-navigation button,.mission-app[data-theme=dark] .mission-eyebrow,.mission-app[data-theme=dark] .mission-hero-meta,.mission-app[data-theme=dark] .mission-intro-strip{color:#a6b5c9}
 .mission-app[data-theme=dark] .mission-navigation .active,.mission-app[data-theme=dark] .mission-navigation button:hover,.mission-app[data-theme=dark] .mission-entry-card:hover{background:#213249;color:#f0f5fc}
 .mission-app[data-theme=dark] .mission-language,.mission-app[data-theme=dark] .mission-theme,.mission-app[data-theme=dark] .mission-button.secondary{border-color:#405168;color:#edf3fc}
