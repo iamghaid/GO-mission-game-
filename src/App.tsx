@@ -10,7 +10,9 @@ import HostDashboard from "./components/HostDashboard";
 import ProjectorScreen from "./components/ProjectorScreen";
 import PlayerJoin from "./components/PlayerJoin";
 import RolePlayScreen from "./components/RolePlayScreen";
-import { Terminal, ShieldAlert, Sparkles, Monitor, Play, Users, Sword, Wifi, RefreshCw, Volume2 } from "lucide-react";
+import { ArrowUpRight, Radio, RefreshCw, Globe2, Zap } from "lucide-react";
+import Welcome from "./components/Welcome";
+import "./design.css";
 
 export const APP_TRANSLATIONS = {
   en: {
@@ -68,7 +70,7 @@ export default function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [currentView, setCurrentView] = useState<'lobby' | 'host' | 'projector' | 'join'>('lobby');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [lang, setLang] = useState<'en' | 'ar'>(() => (localStorage.getItem("go_mission_lang") as 'en' | 'ar') || 'en');
+  const [lang, setLang] = useState<'en' | 'ar'>(() => (localStorage.getItem("go_mission_lang") as 'en' | 'ar') || 'ar');
 
   // Persist language
   useEffect(() => {
@@ -90,7 +92,7 @@ export default function App() {
       if (hash === '#/host') setCurrentView('host');
       else if (hash === '#/projector') setCurrentView('projector');
       else if (hash === '#/join') setCurrentView('join');
-      else setCurrentView('lobby');
+      else if (!hash || hash === '#/lobby') setCurrentView('lobby');
     };
 
     window.addEventListener('hashchange', handleHash);
@@ -218,257 +220,55 @@ export default function App() {
 
   const t = APP_TRANSLATIONS[lang];
 
+  const isArabic = lang === 'ar';
+  const navigation = [
+    { view: 'lobby' as const, label: isArabic ? 'الرئيسية' : 'Home' },
+    { view: 'host' as const, label: isArabic ? 'لوحة المعلم' : 'Host dashboard' },
+    { view: 'join' as const, label: isArabic ? 'انضم للّعبة' : 'Join the game' },
+    { view: 'projector' as const, label: isArabic ? 'شاشة العرض' : 'Class display' }
+  ];
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950 text-slate-100 flex flex-col justify-between selection:bg-yellow-300 selection:text-slate-950 leading-normal font-sans antialiased relative overflow-hidden" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-      {/* HAPPY VIBRANT BACKGROUND GLOWS */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-5%] left-[-5%] w-[60%] h-[50%] bg-pink-500/20 rounded-full blur-[130px]"></div>
-        <div className="absolute bottom-[-5%] right-[-5%] w-[60%] h-[50%] bg-cyan-500/20 rounded-full blur-[130px]"></div>
-        <div className="absolute top-[30%] left-[20%] w-[30%] h-[30%] bg-yellow-400/10 rounded-full blur-[100px]"></div>
-      </div>
-
-      {/* VIBRANT HEADER */}
-      <header className="border-b-2 border-slate-800 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-50 relative">
-        <div className="max-w-7xl mx-auto px-4 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3">
-          <div 
-            onClick={() => setView('lobby')} 
-            className="flex items-center gap-2.5 cursor-pointer hover:opacity-95 select-none"
-          >
-            <div className="p-2 rounded-2xl bg-gradient-to-br from-pink-500 via-yellow-400 to-cyan-400 border border-white/30 shadow-[0_0_15px_rgba(236,72,153,0.3)] shrink-0 animate-bounce">
-              <Sword size={20} className="text-slate-950 font-bold" />
-            </div>
-            <div>
-              <h1 className="text-lg font-black tracking-tight text-white font-sans uppercase flex items-center gap-1.5">
-                {t.gameTitle}
-              </h1>
-              <p className="text-[10px] font-sans text-yellow-350 uppercase tracking-wider font-extrabold mt-0.5">{t.classroomTitle}</p>
-            </div>
-          </div>
-
-          {/* VIEW TABS & LANGUAGE TOGGLE */}
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-slate-800 shadow-inner">
-              <button
-                onClick={() => setView('lobby')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
-                  currentView === 'lobby' 
-                    ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md' 
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {t.welcome}
-              </button>
-              <button
-                onClick={() => setView('host')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
-                  currentView === 'host' 
-                    ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-950 shadow-md' 
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {t.teacher}
-              </button>
-              <button
-                onClick={() => setView('projector')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
-                  currentView === 'projector' 
-                    ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 shadow-md' 
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {t.bigScreen}
-              </button>
-              <button
-                onClick={() => setView('join')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
-                  currentView === 'join' 
-                    ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-950 shadow-md' 
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {t.playOnPhone}
-              </button>
-            </div>
-
-            {/* LANGUAGE SWITCHER */}
-            <button
-              onClick={() => setLang(prev => prev === 'en' ? 'ar' : 'en')}
-              className="px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all border border-slate-700 bg-slate-900 text-yellow-400 hover:bg-slate-800 hover:border-yellow-400 flex items-center gap-1.5 cursor-pointer shadow-md select-none"
-            >
-              🌐 {lang === 'en' ? "العربية" : "English"}
-            </button>
-          </div>
-
-          {/* SIMPLE LINK INDICATOR */}
-          <div className="flex items-center gap-2 font-mono text-[10px] text-slate-300 bg-slate-900 px-3 py-1 rounded-xl border border-slate-800">
-            <div className={`w-2 h-2 rounded-full ${errorMessage ? "bg-red-500 animate-ping" : "bg-emerald-400 animate-ping"}`}></div>
-            <span>{errorMessage ? t.offline : t.online}</span>
-          </div>
-        </div>
+    <div className="mission-app" dir={isArabic ? 'rtl' : 'ltr'}>
+      <a className="mission-skip" href="#mission-main">{isArabic ? 'انتقل إلى المحتوى' : 'Skip to content'}</a>
+      <header className="mission-header">
+        <button className="mission-brand" onClick={() => setView('lobby')} aria-label={isArabic ? 'GO Mission الرئيسية' : 'GO Mission home'}>
+          <span className="mission-brand-icon"><Zap size={22} fill="currentColor" /></span>
+          <span dir="ltr">GO<span className="mission-brand-word">MISSION<span className="mission-brand-dot">.</span></span></span>
+        </button>
+        <nav className="mission-navigation" aria-label={isArabic ? 'التنقل الرئيسي' : 'Main navigation'}>
+          {navigation.map(item => <button key={item.view} aria-current={currentView === item.view ? 'page' : undefined} className={currentView === item.view ? 'active' : ''} onClick={() => setView(item.view)}>{item.label}</button>)}
+        </nav>
+        <button className="mission-language" onClick={() => setLang(isArabic ? 'en' : 'ar')} aria-label={isArabic ? 'Switch to English' : 'التبديل إلى العربية'}><Globe2 size={17}/>{isArabic ? 'EN' : 'العربية'}</button>
       </header>
-
-      {/* ERROR ANCHOR */}
-      {errorMessage && (
-        <div className="bg-red-650/20 border-b border-red-500/30 px-4 py-2 text-center text-[10px] font-mono text-red-400 flex items-center justify-center gap-2">
-          <ShieldAlert size={12} />
-          {errorMessage}
-        </div>
-      )}
-
-      {/* MAIN CONTENT AREA */}
-      <main className="flex-1">
-        {gameState ? (
-          <>
-            {/* If Student claimed a role slot, override Mobile view of that player to show their gameplay interface! */}
-            {currentView === 'join' && userTeam && userRole ? (
-              <RolePlayScreen
-                state={gameState}
-                teamId={userTeam}
-                role={userRole}
-                onExit={handleExitSlot}
-                onRefresh={syncGameState}
-                lang={lang}
-              />
-            ) : (
-              <>
-                {currentView === 'lobby' && (
-                  <div className="max-w-4xl mx-auto px-4 py-12 flex flex-col items-center">
-                    {/* ENERGETIC HERO SECTION */}
-                    <div className="text-center space-y-4 max-w-xl mx-auto mb-12 animate-fade-in">
-                      <div className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 border border-pink-500/30 py-1.5 px-4 rounded-full mb-2 shadow-[0_0_15px_rgba(236,72,153,0.15)] animate-pulse">
-                        <Sparkles size={14} className="text-pink-400" />
-                        <span className="text-[10px] tracking-wider text-pink-300 font-sans font-black uppercase">
-                          {t.readyTitle}
-                        </span>
-                      </div>
-                      <h1 className="text-5xl sm:text-6xl font-black font-sans leading-none tracking-tight text-white uppercase select-none">
-                        {t.gameTitle}
-                      </h1>
-                      <p className="text-sm text-slate-300 leading-relaxed font-sans max-w-md mx-auto">
-                        {t.subTitle}
-                      </p>
-                    </div>
-
-                    {/* THREE ENTRY SEGMENTS (COLORFUL CARDS) */}
-                    <div id="selection-links-view" className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-3xl relative z-10">
-                      {/* Host */}
-                      <button
-                        onClick={() => setView('host')}
-                        className="bg-slate-900/90 hover:bg-slate-850/90 border-2 border-yellow-400/40 hover:border-yellow-400 hover:shadow-[0_0_20px_rgba(250,204,21,0.2)] p-6 rounded-3xl text-left transition-all duration-300 group shadow-xl relative overflow-hidden"
-                      >
-                        <div className="mb-4 text-slate-950 bg-yellow-400 w-11 h-11 rounded-2xl flex items-center justify-center border-2 border-yellow-300 shadow-[0_0_10px_rgba(250,204,21,0.4)] group-hover:scale-110 transition duration-300">
-                          <Terminal size={22} className="stroke-[2.5]" />
-                        </div>
-                        <h3 className="text-base font-extrabold font-sans text-white">{t.dashboardTitle}</h3>
-                        <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-                          {t.dashboardDesc}
-                        </p>
-                      </button>
-
-                      {/* Display */}
-                      <button
-                        onClick={() => setView('projector')}
-                        className="bg-slate-900/90 hover:bg-slate-850/90 border-2 border-cyan-400/40 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.2)] p-6 rounded-3xl text-left transition-all duration-300 group shadow-xl relative overflow-hidden"
-                      >
-                        <div className="mb-4 text-slate-950 bg-cyan-400 w-11 h-11 rounded-2xl flex items-center justify-center border-2 border-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.4)] group-hover:scale-110 transition duration-300">
-                          <Monitor size={22} className="stroke-[2.5]" />
-                        </div>
-                        <h3 className="text-base font-extrabold font-sans text-white">{t.projectorTitle}</h3>
-                        <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-                          {t.projectorDesc}
-                        </p>
-                      </button>
-
-                      {/* Student */}
-                      <button
-                        onClick={() => setView('join')}
-                        className="bg-slate-900/90 hover:bg-slate-850/90 border-2 border-pink-500/40 hover:border-pink-500 hover:shadow-[0_0_20px_rgba(236,72,153,0.2)] p-6 rounded-3xl text-left transition-all duration-300 group shadow-xl relative overflow-hidden"
-                      >
-                        <div className="mb-4 text-slate-950 bg-pink-500 w-11 h-11 rounded-2xl flex items-center justify-center border-2 border-pink-400 shadow-[0_0_10px_rgba(236,72,153,0.4)] group-hover:scale-110 transition duration-300">
-                          <Users size={22} className="stroke-[2.5]" />
-                        </div>
-                        <h3 className="text-base font-extrabold font-sans text-white">{t.joinTitle}</h3>
-                        <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-                          {t.joinDesc}
-                        </p>
-                      </button>
-
-                    </div>
-
-                    {/* INTERACTIVE SOUND BOARD ACCENTS */}
-                    <div className="mt-12 bg-white/5 backdrop-blur-xl border border-white/10 py-4 px-6 rounded-3xl flex items-center justify-between gap-6 max-w-sm w-full font-sans text-xs text-slate-300 relative z-10 shadow-lg">
-                      <span className="flex items-center gap-1.5 font-bold"><Volume2 size={14} className="text-yellow-400" /> {t.soundChecker}</span>
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => sound.playClick()} 
-                          className="px-3 py-1 bg-white/5 border border-white/10 hover:border-cyan-400 hover:bg-white/10 text-slate-200 hover:text-white rounded-xl transition cursor-pointer font-bold text-[11px]"
-                        >
-                          {t.tap}
-                        </button>
-                        <button 
-                          onClick={() => sound.playSuccess()} 
-                          className="px-3 py-1 bg-white/5 border border-white/10 hover:border-emerald-450 hover:bg-white/10 text-slate-200 hover:text-white rounded-xl transition cursor-pointer font-bold text-[11px]"
-                        >
-                          {t.win}
-                        </button>
-                        <button 
-                          onClick={() => sound.playError()} 
-                          className="px-3 py-1 bg-white/5 border border-white/10 hover:border-rose-450 hover:bg-white/10 text-slate-200 hover:text-white rounded-xl transition cursor-pointer font-bold text-[11px]"
-                        >
-                          {t.oops}
-                        </button>
-                      </div>
-                    </div>
-
-                  </div>
-                )}
-
-                {currentView === 'host' && (
-                  <HostDashboard
-                    state={gameState}
-                    onRefresh={syncGameState}
-                    lang={lang}
-                  />
-                )}
-
-                {currentView === 'projector' && (
-                  <ProjectorScreen
-                    state={gameState}
-                    lang={lang}
-                  />
-                )}
-
-                {currentView === 'join' && (
-                  <PlayerJoin
-                    state={gameState}
-                    onSelectSlot={handleSelectSlot}
-                    onRefresh={syncGameState}
-                    lang={lang}
-                  />
-                )}
-              </>
-            )}
-          </>
-        ) : (
-          <div className="flex flex-col items-center justify-center min-h-[400px]">
-            <RefreshCw size={36} className="text-yellow-400 animate-spin" />
-            <p className="text-sm font-sans text-slate-400 mt-4 font-bold">{t.loading}</p>
-          </div>
+      <main id="mission-main">
+        {currentView === 'lobby' ? <Welcome lang={lang} onNavigate={setView} /> : (
+          <section className="mission-workspace">
+            <div className="mission-workspace-heading">
+              <div><span className="mission-eyebrow">GO / {currentView.toUpperCase()}</span><h1>{navigation.find(item => item.view === currentView)?.label}</h1></div>
+              <span className={`mission-status ${errorMessage ? 'disconnected' : ''}`} role="status"><Radio size={15}/>{errorMessage ? (isArabic ? 'المزامنة غير متاحة' : 'Sync unavailable') : gameState ? (isArabic ? 'متصل باللعبة' : 'Connected to game') : (isArabic ? 'جارٍ الاتصال' : 'Connecting')}</span>
+            </div>
+            {gameState ? <div className="mission-game-panel">
+              {currentView === 'host' && <HostDashboard state={gameState} onRefresh={syncGameState} lang={lang}/>}
+              {currentView === 'projector' && <ProjectorScreen state={gameState} lang={lang}/>}
+              {currentView === 'join' && (userTeam && userRole ? <RolePlayScreen state={gameState} teamId={userTeam} role={userRole} onExit={handleExitSlot} onRefresh={syncGameState} lang={lang}/> : <PlayerJoin state={gameState} onSelectSlot={handleSelectSlot} onRefresh={syncGameState} lang={lang}/>)}
+            </div> : <div className="mission-connection">
+              <span className="mission-connection-icon"><Radio size={30}/></span>
+              <h2>{errorMessage ? (isArabic ? 'نحتاج اتصالًا لبدء التحدي' : 'Let’s reconnect before we play') : (isArabic ? 'نجهّز مساحة اللعب' : 'Getting your game ready')}</h2>
+              <p>{errorMessage ? (isArabic ? 'المزامنة غير متاحة حاليًا. يمكنك استكشاف طريقة اللعب والعودة بعد قليل.' : 'Game sync is currently unavailable. Explore how it works and try again shortly.') : (isArabic ? 'لحظات ونوصلك ببقية الفريق.' : 'Connecting you with the rest of your team.')}</p>
+              <div className="mission-connection-actions"><button className="mission-button primary" onClick={syncGameState}><RefreshCw size={17}/>{isArabic ? 'حاول مجددًا' : 'Try again'}</button><button className="mission-button secondary" onClick={()=>setView('lobby')}>{isArabic ? 'طريقة اللعب' : 'How to play'}<ArrowUpRight size={17}/></button></div>
+            </div>}
+          </section>
         )}
       </main>
-
-      {/* FOOTER */}
-      <footer className="border-t border-slate-900 bg-slate-950 py-4 text-center font-sans text-xs text-slate-500">
-        <p>{t.footerText}</p>
-        <div className="mt-4 flex flex-col items-center justify-center gap-3 border-t border-slate-800 pt-5 text-slate-300">
-          <span>{lang === 'ar' ? 'حسابات المطوّرة' : 'Developer profiles'}</span>
+      <footer className="mission-footer">
+        <div className="mission-footer-top"><span className="mission-footer-brand" dir="ltr">GO MISSION.</span><p>{isArabic ? 'مهمة واحدة. أدوار مختلفة. فريق أقوى.' : 'One mission. Different roles. A stronger team.'}</p><span className="mission-footer-note">{isArabic ? 'مصمّمة للحظات التي تجمعنا' : 'Made for the moments that bring us together'}</span></div>
+        <div className="mission-developer"><span>{isArabic ? 'حسابات المطوّرة' : 'Developer profiles'}</span>
           <nav aria-label="Developer profiles" className="flex items-center gap-3">
             <a href="https://github.com/iamghaid" target="_blank" rel="noopener noreferrer" aria-label="GitHub — Gheid Abdulkarim" title="GitHub — Gheid Abdulkarim" style={{backgroundColor: "transparent", color: "inherit"}} className="inline-flex h-[46px] w-[46px] items-center justify-center rounded-lg border border-current hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"><svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true"><path fill="none" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" d="M12 .75a11.25 11.25 0 0 0-3.56 21.92c.56.1.77-.24.77-.54v-2.1c-3.13.68-3.79-1.33-3.79-1.33-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.68.08-.68 1.13.08 1.73 1.16 1.73 1.16 1 1.72 2.63 1.22 3.27.93.1-.73.39-1.22.71-1.5-2.5-.28-5.13-1.25-5.13-5.56 0-1.23.44-2.23 1.16-3.02-.12-.28-.5-1.43.11-2.98 0 0 .95-.3 3.1 1.15a10.8 10.8 0 0 1 5.62 0c2.15-1.46 3.1-1.15 3.1-1.15.62 1.55.23 2.7.12 2.98.72.79 1.15 1.79 1.15 3.02 0 4.32-2.63 5.27-5.14 5.55.4.35.76 1.03.76 2.08v3.1c0 .3.2.65.78.54A11.25 11.25 0 0 0 12 .75Z"/></svg></a>
             <a href="https://www.linkedin.com/in/gheid-abdulkarim-6567872ab" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn — Gheid Abdulkarim" title="LinkedIn — Gheid Abdulkarim" style={{backgroundColor: "transparent", color: "inherit"}} className="inline-flex h-[46px] w-[46px] items-center justify-center rounded-lg border border-current hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"><svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true"><path fill="none" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" d="M5.37 24H.39V7.98h4.98V24ZM2.88 5.8A2.9 2.9 0 1 1 2.9 0a2.9 2.9 0 0 1-.02 5.8ZM24 24h-4.97v-7.8c0-1.86-.04-4.25-2.59-4.25-2.6 0-3 2.02-3 4.12V24H8.47V7.98h4.77v2.19h.07c.66-1.25 2.28-2.57 4.7-2.57 5.03 0 5.96 3.31 5.96 7.62V24Z"/></svg></a>
           </nav>
         </div>
       </footer>
-
     </div>
   );
 }
