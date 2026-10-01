@@ -1,6 +1,4 @@
 {
   "name": "GO mission",
-  "description": "A vibrant bilingual classroom communication party game modeled after Kahoot and Blooket.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "description": "A vibrant bilingual classroom communication party game modeled after Kahoot and Blooket."
 }
