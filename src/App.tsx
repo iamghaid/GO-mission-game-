@@ -470,6 +470,14 @@ export default function App() {
       {/* FOOTER */}
       <footer className="border-t border-slate-900 bg-slate-950 py-4 text-center font-sans text-xs text-slate-500">
         <p>{t.footerText}</p>
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-slate-800 pt-4 text-slate-300">
+          <span>{lang === 'ar' ? 'تطوير غيد عبدالكريم' : 'Developed by Gheid Abdulkarim'}</span>
+          <nav aria-label="Developer profiles" className="flex items-center gap-3">
+            <a href="https://github.com/iamghaid" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-yellow-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">GitHub</a>
+            <span aria-hidden="true">·</span>
+            <a href="https://www.linkedin.com/in/gheid-abdulkarim-6567872ab" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-yellow-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">LinkedIn</a>
+          </nav>
+        </div>
       </footer>
 
     </div>
