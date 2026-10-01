@@ -74,7 +74,6 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("go_mission_lang", lang);
   }, [lang]);
-  
   // Persisted local player role slot
   const [userTeam, setUserTeam] = useState<'blue' | 'red' | null>(null);
   const [userRole, setUserRole] = useState<1 | 2 | 3 | null>(null);
@@ -142,7 +141,6 @@ export default function App() {
         console.error("Auto-join from QR failed:", err);
       }
     };
-    
     checkAutoJoin();
     window.addEventListener('hashchange', checkAutoJoin);
     return () => window.removeEventListener('hashchange', checkAutoJoin);
@@ -154,13 +152,11 @@ export default function App() {
       const res = await fetch("/api/game-state");
       if (res.ok) {
         const data = (await res.json()) as GameState;
-        
         // Audio alert on sudden round winner announcements
         const currentGameState = gameStateRef.current;
         if (currentGameState && !currentGameState.winner && data.winner) {
           sound.playVictoryTheme();
         }
-        
         setGameState(data);
         setErrorMessage(null);
       } else {
@@ -224,7 +220,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950 text-slate-100 flex flex-col justify-between selection:bg-yellow-300 selection:text-slate-950 leading-normal font-sans antialiased relative overflow-hidden" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-      
       {/* HAPPY VIBRANT BACKGROUND GLOWS */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-5%] left-[-5%] w-[60%] h-[50%] bg-pink-500/20 rounded-full blur-[130px]"></div>
@@ -235,7 +230,6 @@ export default function App() {
       {/* VIBRANT HEADER */}
       <header className="border-b-2 border-slate-800 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-50 relative">
         <div className="max-w-7xl mx-auto px-4 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3">
-          
           <div 
             onClick={() => setView('lobby')} 
             className="flex items-center gap-2.5 cursor-pointer hover:opacity-95 select-none"
@@ -339,7 +333,6 @@ export default function App() {
               <>
                 {currentView === 'lobby' && (
                   <div className="max-w-4xl mx-auto px-4 py-12 flex flex-col items-center">
-                    
                     {/* ENERGETIC HERO SECTION */}
                     <div className="text-center space-y-4 max-w-xl mx-auto mb-12 animate-fade-in">
                       <div className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 border border-pink-500/30 py-1.5 px-4 rounded-full mb-2 shadow-[0_0_15px_rgba(236,72,153,0.15)] animate-pulse">
@@ -348,11 +341,9 @@ export default function App() {
                           {t.readyTitle}
                         </span>
                       </div>
-                      
                       <h1 className="text-5xl sm:text-6xl font-black font-sans leading-none tracking-tight text-white uppercase select-none">
                         {t.gameTitle}
                       </h1>
-                      
                       <p className="text-sm text-slate-300 leading-relaxed font-sans max-w-md mx-auto">
                         {t.subTitle}
                       </p>
@@ -360,7 +351,6 @@ export default function App() {
 
                     {/* THREE ENTRY SEGMENTS (COLORFUL CARDS) */}
                     <div id="selection-links-view" className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-3xl relative z-10">
-                      
                       {/* Host */}
                       <button
                         onClick={() => setView('host')}
@@ -470,12 +460,11 @@ export default function App() {
       {/* FOOTER */}
       <footer className="border-t border-slate-900 bg-slate-950 py-4 text-center font-sans text-xs text-slate-500">
         <p>{t.footerText}</p>
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-slate-800 pt-4 text-slate-300">
-          <span>{lang === 'ar' ? 'تطوير غيد عبدالكريم' : 'Developed by Gheid Abdulkarim'}</span>
+        <div className="mt-4 flex flex-col items-center justify-center gap-3 border-t border-slate-800 pt-5 text-slate-300">
+          <span>{lang === 'ar' ? 'حسابات المطوّرة' : 'Developer profiles'}</span>
           <nav aria-label="Developer profiles" className="flex items-center gap-3">
-            <a href="https://github.com/iamghaid" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-yellow-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">GitHub</a>
-            <span aria-hidden="true">·</span>
-            <a href="https://www.linkedin.com/in/gheid-abdulkarim-6567872ab" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-yellow-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">LinkedIn</a>
+            <a href="https://github.com/iamghaid" target="_blank" rel="noopener noreferrer" aria-label="GitHub — Gheid Abdulkarim" title="GitHub — Gheid Abdulkarim" style={{backgroundColor: "#24292f", color: "white"}} className="inline-flex h-[46px] w-[46px] items-center justify-center rounded-lg border border-white/15 shadow-md hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"><svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true"><path fill="currentColor" d="M12 .75a11.25 11.25 0 0 0-3.56 21.92c.56.1.77-.24.77-.54v-2.1c-3.13.68-3.79-1.33-3.79-1.33-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.68.08-.68 1.13.08 1.73 1.16 1.73 1.16 1 1.72 2.63 1.22 3.27.93.1-.73.39-1.22.71-1.5-2.5-.28-5.13-1.25-5.13-5.56 0-1.23.44-2.23 1.16-3.02-.12-.28-.5-1.43.11-2.98 0 0 .95-.3 3.1 1.15a10.8 10.8 0 0 1 5.62 0c2.15-1.46 3.1-1.15 3.1-1.15.62 1.55.23 2.7.12 2.98.72.79 1.15 1.79 1.15 3.02 0 4.32-2.63 5.27-5.14 5.55.4.35.76 1.03.76 2.08v3.1c0 .3.2.65.78.54A11.25 11.25 0 0 0 12 .75Z"/></svg></a>
+            <a href="https://www.linkedin.com/in/gheid-abdulkarim-6567872ab" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn — Gheid Abdulkarim" title="LinkedIn — Gheid Abdulkarim" style={{backgroundColor: "#0a66c2", color: "white"}} className="inline-flex h-[46px] w-[46px] items-center justify-center rounded-lg border border-white/15 shadow-md hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"><svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true"><path fill="currentColor" d="M5.37 24H.39V7.98h4.98V24ZM2.88 5.8A2.9 2.9 0 1 1 2.9 0a2.9 2.9 0 0 1-.02 5.8ZM24 24h-4.97v-7.8c0-1.86-.04-4.25-2.59-4.25-2.6 0-3 2.02-3 4.12V24H8.47V7.98h4.77v2.19h.07c.66-1.25 2.28-2.57 4.7-2.57 5.03 0 5.96 3.31 5.96 7.62V24Z"/></svg></a>
           </nav>
         </div>
       </footer>
