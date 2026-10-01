@@ -71,3 +71,16 @@
 @keyframes mission-message{0%{transform:translateX(0);opacity:0}15%,75%{opacity:1}100%{transform:translateX(42px);opacity:0}}
 @keyframes mission-color-drift{from{opacity:.4;transform:translateY(-8px)}to{opacity:1;transform:translateY(8px)}}
 @media(prefers-reduced-motion:reduce){.mission-app *,.mission-app *::before,.mission-app *::after{animation:none!important;transition:none!important}.mission-role-card:hover,.mission-brand:hover .mission-brand-image{transform:none}}
+/* Gameplay surfaces follow the same theme as the surrounding page. */
+.mission-app{--game-surface:#ffffff;--game-raised:#f0f4f9;--game-border:#d5dfeb;--game-text:#142b44;--game-muted:#586b82}
+.mission-app[data-theme=dark]{--game-surface:#122236;--game-raised:#1c324b;--game-border:#314860;--game-text:#e8eef7;--game-muted:#a6b5c9}
+.mission-game-panel{background:var(--game-surface);color:var(--game-text);border:1px solid var(--game-border)}
+.mission-game-panel [class*="bg-slate-"],.mission-game-panel [class*="bg-gray-"],.mission-game-panel [class*="bg-zinc-"]{background-color:var(--game-raised)!important}
+.mission-game-panel div[class*="bg-gradient"]{background-color:var(--game-raised)!important;border-color:var(--game-border)!important}
+.mission-game-panel [class*="border-slate-"],.mission-game-panel [class*="border-white"]{border-color:var(--game-border)!important}
+.mission-game-panel [class~="text-white"],.mission-game-panel [class*="text-slate-100"],.mission-game-panel [class*="text-slate-200"],.mission-game-panel [class*="text-slate-300"]{color:var(--game-text)!important}
+.mission-game-panel [class*="text-slate-400"],.mission-game-panel [class*="text-slate-500"],.mission-game-panel [class*="text-slate-600"]{color:var(--game-muted)!important}
+.mission-app[data-theme=light] .mission-game-panel [class*="text-cyan-"]{color:#126681!important}.mission-app[data-theme=light] .mission-game-panel [class*="text-pink-"]{color:#a02c62!important}.mission-app[data-theme=light] .mission-game-panel [class*="text-emerald-"]{color:#1c7655!important}.mission-app[data-theme=light] .mission-game-panel [class*="text-yellow-"],.mission-app[data-theme=light] .mission-game-panel [class*="text-amber-"]{color:#8d5c12!important}.mission-app[data-theme=light] .mission-game-panel [class*="text-rose-"]{color:#b13450!important}
+.mission-app[data-theme=light] .mission-game-panel [class*="bg-cyan-950"],.mission-app[data-theme=light] .mission-game-panel [class*="bg-pink-950"]{background-color:#edf3fa!important}
+.mission-app[data-theme=light] .mission-visual-flow>span:last-child{background:#ffe2d1;color:#754229;border-color:#f2c2a9}
+.mission-app[data-theme=light] .mission-button.primary{background:#ffe2d1;color:#754229;border-color:#f2c2a9}.mission-app[data-theme=light] .mission-button.primary:hover{background:#ffd5bc}
