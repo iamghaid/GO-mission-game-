@@ -13,6 +13,7 @@ import RolePlayScreen from "./components/RolePlayScreen";
 import { ArrowUpRight, Radio, RefreshCw, Globe2, Moon, Sun } from "lucide-react";
 import Welcome from "./components/Welcome";
 import "./design.css";
+import { presentationFromQuery } from "./presentation";
 
 export const APP_TRANSLATIONS = {
   en: {
@@ -70,11 +71,20 @@ export default function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [currentView, setCurrentView] = useState<'lobby' | 'host' | 'projector' | 'join'>('lobby');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [lang, setLang] = useState<'en' | 'ar'>(() => localStorage.getItem("go_mission_lang") === "ar" ? "ar" : "en");
+  const [lang, setLang] = useState<'en' | 'ar'>(() => presentationFromQuery(window.location.search).language ?? (localStorage.getItem("go_mission_lang") === "ar" ? "ar" : "en"));
 
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => localStorage.getItem("go_mission_theme") === "light" ? "light" : "dark");
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => presentationFromQuery(window.location.search).theme ?? (localStorage.getItem("go_mission_theme") === "light" ? "light" : "dark"));
   useEffect(() => { localStorage.setItem("go_mission_theme", theme); document.documentElement.style.colorScheme = theme; }, [theme]);
 
+  useEffect(() => {
+    const receive = (event: MessageEvent) => {
+      if (event.source !== window.parent || event.origin !== 'https://gheid-mycv.vercel.app' || event.data?.type !== 'portfolio:presentation') return;
+      if (event.data.language === 'en' || event.data.language === 'ar') setLang(event.data.language);
+      if (event.data.theme === 'light' || event.data.theme === 'dark') setTheme(event.data.theme);
+    };
+    window.addEventListener('message', receive);
+    return () => window.removeEventListener('message', receive);
+  }, []);
   // Persist language
   useEffect(() => {
     localStorage.setItem("go_mission_lang", lang);

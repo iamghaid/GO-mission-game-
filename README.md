@@ -48,3 +48,7 @@ The interface supports Arabic and English, responsive phone and classroom layout
 Run `node --import tsx --test tests/migration.test.ts` to check concurrent role updates, deadline expiration, invalid grid/scoring requests and storage failures. Live storage writes and reads were also verified after connecting Redis.
 
 New visitors start in English with dark mode. Language and theme changes are saved locally for subsequent visits.
+
+
+## Portfolio presentation
+Opening from the portfolio passes `portfolio_lang=en|ar` and `portfolio_theme=light|dark`. Valid link preferences take precedence on entry; the visitor can then change them locally. Embedded previews also accept `portfolio:presentation` messages only from the parent at `https://gheid-mycv.vercel.app`, and update without reloading the project.
