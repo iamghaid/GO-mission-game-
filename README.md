@@ -46,4 +46,5 @@ The interface supports Arabic and English, responsive phone and classroom layout
 
 ## Reliability checks
 Run `node --import tsx --test tests/migration.test.ts` to check concurrent role updates, deadline expiration, invalid grid/scoring requests and storage failures. Live storage writes and reads were also verified after connecting Redis.
-`nNew visitors start in English with dark mode. Language and theme changes are saved locally for subsequent visits.
+
+New visitors start in English with dark mode. Language and theme changes are saved locally for subsequent visits.
